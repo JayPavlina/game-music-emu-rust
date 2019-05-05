@@ -1,0 +1,4 @@
+#[build]
+#cxxflags = "asdf"
+
+#CXXFLAGS = "ASDF"
