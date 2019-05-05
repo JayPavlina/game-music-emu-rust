@@ -1,18 +1,28 @@
 [package]
 name = "game-music-emu"
 version = "0.1.0"
-authors = ["Jay Pavlina <jay@explodingrabbit.com>"]
+authors = ["Jay Pavlina <jaypavlina@gmail.com>"]
 edition = "2018"
-#links = "gme"
 build = "build.rs"
+
+[features]
+default = ["ay", "gbs", "gym", "hes", "kss", "nsf", "nsfe", "sap", "spc", "vgm",]
+ay = []
+gbs = []
+gym = []
+hes = []
+kss = []
+nsf = []
+nsfe = []
+sap = []
+spc = []
+vgm = []
 
 #[lib]
 #crate-type = ["cdylib"]
 
 [dependencies]
-#cpal = "0.8.2"
-#rodio = "0.8.1"
-libc = "0.2.50"
+libc = "0.2"
 
 [build-dependencies]
 cc = "1.0"

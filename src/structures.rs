@@ -8,32 +8,65 @@ use crate::wrapper::GmeResult;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
 pub enum GmeType {
+    Ay,
+    Gbs,
+    Gym,
+    Hes,
+    Kss,
     Nsf,
     Nsfe,
-    Kss,
+    Sap,
+    Spc,
+    Vgm,
+    /// Vgz comes with Vgm
+    Vgz
 }
 
 mod extensions {
+    pub const AY: &'static str = "AY";
+    pub const GBS: &'static str = "GBS";
+    pub const GYM: &'static str = "GYM";
+    pub const HES: &'static str = "HES";
+    pub const KSS: &'static str = "KSS";
     pub const NSF: &'static str = "NSF";
     pub const NSFE: &'static str = "NSFE";
-    pub const KSS: &'static str = "KSS";
+    pub const SAP: &'static str = "SAP";
+    pub const SPC: &'static str = "SPC";
+    pub const VGM: &'static str = "VGM";
+    pub const VGZ: &'static str = "VGZ";
 }
 
 impl GmeType {
     pub fn from_extension(value: &str) -> GmeType {
         match value {
+            extensions::AY => GmeType::Ay,
+            extensions::GBS => GmeType::Gbs,
+            extensions::GYM => GmeType::Gym,
+            extensions::HES => GmeType::Hes,
+            extensions::KSS => GmeType::Kss,
             extensions::NSF => GmeType::Nsf,
             extensions::NSFE => GmeType::Nsfe,
-            extensions::KSS => GmeType::Kss,
-            _ => { panic!() }
+            extensions::SAP => GmeType::Sap,
+            extensions::SPC => GmeType::Spc,
+            extensions::VGM => GmeType::Vgm,
+            extensions::VGZ => GmeType::Vgz,
+            _ => panic!()
         }
     }
 
     pub fn to_extension(&self) -> &'static str {
         match self {
+            GmeType::Ay => extensions::AY,
+            GmeType::Gbs => extensions::GBS,
+            GmeType::Gym => extensions::GYM,
+            GmeType::Hes => extensions::HES,
+            GmeType::Kss => extensions::KSS,
             GmeType::Nsf => extensions::NSF,
             GmeType::Nsfe => extensions::NSFE,
-            GmeType::Kss => extensions::KSS,
+            GmeType::Sap => extensions::SAP,
+            GmeType::Spc => extensions::SPC,
+            GmeType::Vgm => extensions::VGM,
+            GmeType::Vgz => extensions::VGZ
         }
     }
 }
