@@ -8,12 +8,6 @@
 
 // Uncomment and edit list to support only the listed game music types,
 // so that the others don't get linked in at all.
-
-//#define GME_TYPE_LIST \
-//	gme_nsf_type,\
-//	gme_nsfe_type,\
-//	gme_kss_type
-
 /*
 #define GME_TYPE_LIST \
 	gme_ay_type,\

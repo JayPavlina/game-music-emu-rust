@@ -4,7 +4,7 @@ use std::mem::transmute_copy;
 use std::intrinsics::transmute;
 use std::sync::Arc;
 use crate::native;
-use crate::wrapper::GmeResult;
+use crate::experimental::GmeResult;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
 pub enum GmeType {

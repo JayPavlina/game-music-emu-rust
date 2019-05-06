@@ -4,7 +4,7 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::slice;
 use crate::structures::{GmeType, EmuHandle, GmeError};
-use crate::wrapper::GmeResult;
+use crate::experimental::GmeResult;
 
 pub fn identify_header(buffer: Vec<u8>) -> String {
     unsafe { CStr::from_ptr(gme_identify_header(buffer.as_ptr())).to_str().unwrap().to_string() }
@@ -144,6 +144,7 @@ extern {
 mod tests {
     use super::*;
     use std::io::Read;
+    use std::fs::File;
 
     #[test]
     fn test_get_types() {
@@ -153,7 +154,7 @@ mod tests {
 
     #[test]
     fn test_open_data() {
-        let mut file = std::fs::File::open("test.nsf").unwrap();
+        let mut file = File::open("test.nsf").unwrap();
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer).unwrap();
 

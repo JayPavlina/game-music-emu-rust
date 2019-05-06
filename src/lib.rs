@@ -2,10 +2,10 @@
 #![feature(maybe_uninit)]
 
 pub mod native;
-mod wrapper;
+mod experimental;
 mod structures;
 
 pub use self::{
-    wrapper::GameMusicEmu,
+    experimental::GameMusicEmu,
     structures::{GmeType, EmuHandle}
 };

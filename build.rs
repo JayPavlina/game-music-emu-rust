@@ -1,3 +1,5 @@
+use std::env;
+
 fn main() {
     let mut flags = Vec::new();
 
@@ -52,7 +54,16 @@ fn main() {
     }
 
     if vgm || gym {
-        files.push("Ym2612_Emu.cpp");
+        if cfg!(feature = "ym2612_emu_nuked") {
+            flags.push("VGM_YM2612_NUKED");
+            files.push("Ym2612_Nuked.cpp");
+        } else if cfg!(feature = "ym2612_emu_mame") {
+            flags.push("VGM_YM2612_MAME");
+            files.push("Ym2612_MAME.cpp");
+        } else {
+            flags.push("VGM_YM2612_GENS");
+            files.push("Ym2612_GENS.cpp");
+        }
     }
 
     if vgm || gym || kss {
@@ -141,6 +152,7 @@ fn main() {
 
     let mut build = cc::Build::new();
     build.cpp(true);
+    build.flag("-std=c++11");
 
     for file in files {
         build.file(format!("src/gme/{}", file));

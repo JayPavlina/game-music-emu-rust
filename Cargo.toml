@@ -1,12 +1,12 @@
 [package]
-name = "game-music-emu"
+name = "gme"
 version = "0.1.0"
 authors = ["Jay Pavlina <jaypavlina@gmail.com>"]
 edition = "2018"
 build = "build.rs"
 
 [features]
-default = ["ay", "gbs", "gym", "hes", "kss", "nsf", "nsfe", "sap", "spc", "vgm",]
+default = ["ay", "gbs", "gym", "hes", "kss", "nsf", "nsfe", "sap", "spc", "vgm", "ym2612_emu_nuked"]
 ay = []
 gbs = []
 gym = []
@@ -17,6 +17,9 @@ nsfe = []
 sap = []
 spc = []
 vgm = []
+# choose one ym2612_emu or none. If none chosen, Ym2612_GENS.cpp is used
+ym2612_emu_nuked = []
+ym2612_emu_mame = []
 
 #[lib]
 #crate-type = ["cdylib"]

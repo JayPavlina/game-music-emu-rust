@@ -1,4 +1,4 @@
-// Game_Music_Emu 0.6.0. http://www.slack.net/~ant/
+// Game_Music_Emu https://bitbucket.org/mpyne/game-music-emu/
 
 #include "Sap_Emu.h"
 
@@ -236,8 +236,7 @@ static Music_Emu* new_sap_emu () { return BLARGG_NEW Sap_Emu ; }
 static Music_Emu* new_sap_file() { return BLARGG_NEW Sap_File; }
 
 static gme_type_t_ const gme_sap_type_ = { "Atari XL", 0, &new_sap_emu, &new_sap_file, "SAP", 1 };
-gme_type_t const gme_sap_type = &gme_sap_type_;
-
+BLARGG_EXPORT extern gme_type_t const gme_sap_type = &gme_sap_type_;
 
 // Setup
 

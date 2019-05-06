@@ -6,7 +6,7 @@ version = "1.0.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "game-music-emu"
+name = "gme"
 version = "0.1.0"
 dependencies = [
  "cc 1.0.35 (registry+https://github.com/rust-lang/crates.io-index)",

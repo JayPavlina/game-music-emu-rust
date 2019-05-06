@@ -27,7 +27,7 @@ impl GameMusicEmu {
 
 #[cfg(test)]
 mod tests {
-    use crate::wrapper::GameMusicEmu;
+    use crate::experimental::GameMusicEmu;
     use crate::structures::GmeType;
     use std::io::Read;
     use std::sync::Arc;

@@ -13,7 +13,8 @@
 -- Detecting CXX compiler ABI info - done
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
-CMake Error at CMakeLists.txt:153 (set_target_properties):
+ZLib library not found, disabling support for compressed formats such as VGZ
+CMake Error at CMakeLists.txt:189 (set_target_properties):
   set_target_properties called with incorrect number of arguments.
 
 
