@@ -1,6 +1,6 @@
 # Game Music Emu Rust
 
-This project contains Rust bindings for [Game Music Emu](https://bitbucket.org/mpyne/game-music-emu/wiki/Home). It is pretty barebones at the moment and does not cover everything, but eventually it will have bindings for all functions in [gme.h](./src/gme/gme.h). 
+This crate contains Rust bindings for [Game Music Emu](https://bitbucket.org/mpyne/game-music-emu/wiki/Home). It is pretty barebones at the moment and does not cover everything, but eventually it will have bindings for most of the functions in [gme.h](./src/gme/gme.h). 
 
 So far, it has only been verified to work with NSF, but it should work with other formats as well.
 
@@ -23,36 +23,40 @@ gme = { version = 0.1, default-features = false, features = ["gbs", "nsf"]
 ```
 See [Cargo.toml](Cargo.toml) for all available features. The build logic is in [build.rs](build.rs).
 
-## Usage
+## Usage Through Native Functions
 
-Functions from [gme.h](./src/gme/gme.h) are exposed at the root level, and can be viewed in [native.rs](src/native.rs). Most of them require an `EmuHandle`, which holds the pointer to a gme instance.
+Functions from [gme.h](./src/gme/gme.h) are exposed at the root level, and can be viewed in [native.rs](src/native.rs). Most of them require an `EmuHandle`, which holds the pointer to a `MusicEmu` instance in the C++ code.
 
 You can get an `EmuHandle` simply like this:
 ```rust
-let handle = gme::new_emu(gme::EmuType::Nsf, sample_rate);
+let handle = gme::new_emu(gme::EmuType::Nsf, 44100);
 ```
-You can also get one by loading a file.
+You can also get a handle by loading a file. This is a convenience function that will create an instance with the file data already loaded.
 
 ```rust
-use std::io::Read;
-use std::fs::File;
-    
-let mut file = File::open("test.nsf").unwrap();
-let mut buffer = Vec::new();
-file.read_to_end(&mut buffer).unwrap();
-let handle = gme::open_data(&buffer, 44100).ok().unwrap();
+let handle = gme::open_file("test.nsf", 44100).ok().unwrap();
 
 ```
 
 Once you have the handle, you can access any of the functions with it:
 ```rust
-let track_count = gme::get_track_count(&handle);
+let track_count = gme::track_count(&handle);
 gme::start_track(&handle, 0);
 ```
 
-`EmuHandle`s are reference counted and the gme instance they reference is automatically freed when they are dropped. 
+`EmuHandles` are reference counted and the `MusicEmu` instance they reference is automatically freed when they are dropped.
+## Simplified Usage
 
-Note that the [experimental module](src/experimental.rs) is not yet ready for use and will change. This mainly includes the `GameMusicEmu` struct, which will allow simplified access to gme's functions.
+Instead of using native functions, you can use the `GameMusicEmu` struct, which provides a wrapper around the functions that take an `EmuHandle`. You can use it like this:
+```rust
+use gme::{EmuType, GameMusicEmu};
+
+let emu = GameMusicEmu::new(EmuType::Nsf, 44100);
+let track_count = emu.track_count();
+emu.start_track(0);
+```
+
+Is it weird that there are two ways to use the API? Maybe. If there is no reason to have both, we could switch to the wrapper version only, but let's see how it goes.
 
 ## Authors
 

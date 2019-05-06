@@ -1,5 +1,3 @@
-use std::env;
-
 fn main() {
     let mut flags = Vec::new();
 

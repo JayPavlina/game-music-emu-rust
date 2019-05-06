@@ -4,8 +4,11 @@ use std::mem::transmute_copy;
 use std::intrinsics::transmute;
 use std::sync::Arc;
 use crate::native;
-use crate::experimental::GmeResult;
 
+pub(crate) type GmeVoidResult = Result<(), GmeError>;
+pub(crate) type GmeHandleResult = Result<EmuHandle, GmeError>;
+
+/// All supported emulator types
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
 pub enum EmuType {
     Ay,
@@ -22,6 +25,7 @@ pub enum EmuType {
     Vgz
 }
 
+/// File extension for each EmuType
 mod extensions {
     pub const AY: &'static str = "AY";
     pub const GBS: &'static str = "GBS";
@@ -37,6 +41,7 @@ mod extensions {
 }
 
 impl EmuType {
+    /// Get an `EmuType` from a file extension
     pub fn from_extension(value: &str) -> EmuType {
         match value {
             extensions::AY => EmuType::Ay,
@@ -54,6 +59,7 @@ impl EmuType {
         }
     }
 
+    /// Get a file extension from an `EmuType`
     pub fn to_extension(&self) -> &'static str {
         match self {
             EmuType::Ay => extensions::AY,
@@ -71,6 +77,8 @@ impl EmuType {
     }
 }
 
+/// Holds a pointer to a `MusicEmu` instance in the C++ code. It automatically frees the instance
+/// when dropped.
 #[derive(Clone)]
 pub struct EmuHandle {
     pub(crate) emu: Arc<MusicEmu>

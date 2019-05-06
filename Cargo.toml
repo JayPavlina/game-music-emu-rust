@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Jay Pavlina <jaypavlina@gmail.com>"]
 edition = "2018"
 build = "build.rs"
+readme = "README.md"
+license = "MIT AND LGPLv2.1"
+description = "Rust bindings for Game Music Emu"
+keywords = ["NSF", "game", "music", "emu", "audio"]
+categories = ["api-bindings", "multimedia::audio"]
 
 [features]
 default = ["ay", "gbs", "gym", "hes", "kss", "nsf", "nsfe", "sap", "spc", "vgm", "ym2612_emu_nuked"]
@@ -20,9 +25,6 @@ vgm = []
 # choose one ym2612_emu or none. If none chosen, Ym2612_GENS.cpp is used
 ym2612_emu_nuked = []
 ym2612_emu_mame = []
-
-#[lib]
-#crate-type = ["cdylib"]
 
 [dependencies]
 libc = "0.2"

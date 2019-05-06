@@ -1,8 +1,8 @@
-use crate::structures::{EmuType, EmuHandle, GmeError};
+use crate::structures::{EmuType, EmuHandle, GmeError, GmeVoidResult};
 use crate::native;
+use std::path::Path;
 
-pub type GmeResult = Result<(), GmeError>;
-
+/// Provides a wrapper around native functions that take an `EmuHandle`
 #[derive(Clone)]
 pub struct GameMusicEmu {
     handle: EmuHandle,
@@ -14,20 +14,32 @@ impl GameMusicEmu {
         Self { handle: native::new_emu(emu_type, sample_rate), emu_type, }
     }
 
-    pub fn load_data(&self, data: &[u8]) -> GmeResult { native::load_data(&self.handle, data) }
+    #[inline]
+    pub fn load_data(&self, data: &[u8]) -> GmeVoidResult { native::load_data(&self.handle, data) }
 
-    pub fn play(&self, count: usize, buffer: &mut [i16]) -> GmeResult {
+    #[inline]
+    pub fn load_file(&self, path: impl AsRef<Path>) -> GmeVoidResult {
+        native::load_file(&self.handle, path)
+    }
+
+    #[inline]
+    pub fn play(&self, count: usize, buffer: &mut [i16]) -> GmeVoidResult {
         native::play(&self.handle, count, buffer)
     }
 
-    pub fn start_track(&self, index: u32) -> GmeResult { native::start_track(&self.handle, index) }
-    pub fn track_count(&self) -> usize { native::get_track_count(&self.handle) }
+    #[inline]
+    pub fn start_track(&self, index: u32) -> GmeVoidResult { native::start_track(&self.handle, index) }
+
+    #[inline]
+    pub fn track_count(&self) -> usize { native::track_count(&self.handle) }
+
+    #[inline]
     pub fn handle(&self) -> &EmuHandle { &self.handle}
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::experimental::GameMusicEmu;
+    use crate::wrapper::GameMusicEmu;
     use crate::structures::EmuType;
     use std::io::Read;
     use std::sync::Arc;
