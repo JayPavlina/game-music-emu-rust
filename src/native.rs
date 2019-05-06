@@ -3,7 +3,7 @@ extern crate libc;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::slice;
-use crate::structures::{GmeType, EmuHandle, GmeError};
+use crate::structures::{EmuType, EmuHandle, GmeError};
 use crate::experimental::GmeResult;
 
 pub fn identify_header(buffer: Vec<u8>) -> String {
@@ -58,7 +58,7 @@ fn process_result(result: *const c_char) -> GmeResult {
     }
 }
 
-pub fn get_types() -> Vec<GmeType> {
+pub fn get_types() -> Vec<EmuType> {
     let mut types = Vec::new();
     unsafe {
         let mut p = gme_type_list();
@@ -66,18 +66,18 @@ pub fn get_types() -> Vec<GmeType> {
             let gme_type = p.clone().read();
             let extension = CStr::from_ptr((*gme_type).extension).to_str().unwrap();
             println!("extension: {}", extension);
-            types.push(GmeType::from_extension(extension));
+            types.push(EmuType::from_extension(extension));
             p = p.offset(1);
         }
     }
     types
 }
 
-pub fn new_emu(gme_type: GmeType, sample_rate: i32) -> EmuHandle {
+pub fn new_emu(emu_type: EmuType, sample_rate: u32) -> EmuHandle {
     unsafe {
-        let cstring = CString::new(gme_type.to_extension()).unwrap();
+        let cstring = CString::new(emu_type.to_extension()).unwrap();
         let gme_type = gme_identify_extension(cstring.as_ptr());
-        let music_emu = gme_new_emu(gme_type, sample_rate);
+        let music_emu = gme_new_emu(gme_type, sample_rate as i32);
         EmuHandle::new(music_emu)
     }
 }
@@ -160,5 +160,6 @@ mod tests {
 
         let handle = open_data(&buffer, 44100).ok().unwrap();
         assert_eq!(get_track_count(&handle), 1);
+        start_track(&handle, 0);
     }
 }

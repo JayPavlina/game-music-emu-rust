@@ -7,5 +7,5 @@ mod structures;
 
 pub use self::{
     experimental::GameMusicEmu,
-    structures::{GmeType, EmuHandle}
+    structures::{EmuType, EmuHandle}
 };

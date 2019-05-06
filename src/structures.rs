@@ -7,7 +7,7 @@ use crate::native;
 use crate::experimental::GmeResult;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
-pub enum GmeType {
+pub enum EmuType {
     Ay,
     Gbs,
     Gym,
@@ -36,37 +36,37 @@ mod extensions {
     pub const VGZ: &'static str = "VGZ";
 }
 
-impl GmeType {
-    pub fn from_extension(value: &str) -> GmeType {
+impl EmuType {
+    pub fn from_extension(value: &str) -> EmuType {
         match value {
-            extensions::AY => GmeType::Ay,
-            extensions::GBS => GmeType::Gbs,
-            extensions::GYM => GmeType::Gym,
-            extensions::HES => GmeType::Hes,
-            extensions::KSS => GmeType::Kss,
-            extensions::NSF => GmeType::Nsf,
-            extensions::NSFE => GmeType::Nsfe,
-            extensions::SAP => GmeType::Sap,
-            extensions::SPC => GmeType::Spc,
-            extensions::VGM => GmeType::Vgm,
-            extensions::VGZ => GmeType::Vgz,
+            extensions::AY => EmuType::Ay,
+            extensions::GBS => EmuType::Gbs,
+            extensions::GYM => EmuType::Gym,
+            extensions::HES => EmuType::Hes,
+            extensions::KSS => EmuType::Kss,
+            extensions::NSF => EmuType::Nsf,
+            extensions::NSFE => EmuType::Nsfe,
+            extensions::SAP => EmuType::Sap,
+            extensions::SPC => EmuType::Spc,
+            extensions::VGM => EmuType::Vgm,
+            extensions::VGZ => EmuType::Vgz,
             _ => panic!()
         }
     }
 
     pub fn to_extension(&self) -> &'static str {
         match self {
-            GmeType::Ay => extensions::AY,
-            GmeType::Gbs => extensions::GBS,
-            GmeType::Gym => extensions::GYM,
-            GmeType::Hes => extensions::HES,
-            GmeType::Kss => extensions::KSS,
-            GmeType::Nsf => extensions::NSF,
-            GmeType::Nsfe => extensions::NSFE,
-            GmeType::Sap => extensions::SAP,
-            GmeType::Spc => extensions::SPC,
-            GmeType::Vgm => extensions::VGM,
-            GmeType::Vgz => extensions::VGZ
+            EmuType::Ay => extensions::AY,
+            EmuType::Gbs => extensions::GBS,
+            EmuType::Gym => extensions::GYM,
+            EmuType::Hes => extensions::HES,
+            EmuType::Kss => extensions::KSS,
+            EmuType::Nsf => extensions::NSF,
+            EmuType::Nsfe => extensions::NSFE,
+            EmuType::Sap => extensions::SAP,
+            EmuType::Spc => extensions::SPC,
+            EmuType::Vgm => extensions::VGM,
+            EmuType::Vgz => extensions::VGZ
         }
     }
 }
