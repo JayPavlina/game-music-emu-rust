@@ -43,7 +43,7 @@ gme::start_track(&handle, 0);
 ```
 
 `EmuHandles` are reference counted and the `MusicEmu` instance they reference is automatically freed when they are dropped.
-## Simplified Usage
+## Usage Through Wrapper
 
 Instead of using native functions, you can use the `GameMusicEmu` struct, which provides a wrapper around the functions that take an `EmuHandle`. You can use it like this:
 ```rust
@@ -54,7 +54,7 @@ emu.load_file("test.nsf");
 emu.start_track(0);
 ```
 
-//! The `GameMusicEmu` struct will eventually be extended to be more than just a wrapper.
+The `GameMusicEmu` struct will eventually be extended to be more than just a wrapper.
 
 ## Authors
 
@@ -71,3 +71,4 @@ Game Music Emu is licensed under LGPLv2.1. See its [license](src/gme/license.txt
 ## Acknowledgments
 
 * Shay Green for creating Game Music Emu
+* Michael Pyne for maintaining Game Music Emu

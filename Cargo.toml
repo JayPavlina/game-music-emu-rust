@@ -7,7 +7,7 @@ build = "build.rs"
 readme = "README.md"
 license = "MIT AND LGPLv2.1"
 description = "Rust bindings for Game Music Emu"
-keywords = ["NSF", "game", "music", "emu", "audio"]
+keywords = ["NSF", "game", "music", "emulation", "audio"]
 categories = ["api-bindings", "multimedia::audio"]
 
 [features]

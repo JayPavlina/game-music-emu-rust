@@ -47,7 +47,7 @@
 //!```
 //! The `GameMusicEmu` struct will eventually be extended to be more than just a wrapper.
 
-#![allow(dead_code, unused_imports, unused_variables, unused_must_use, unused_mut)]
+#![allow(dead_code, unused_imports, unused_variables, unused_must_use, unused_mut, non_camel_case_types)]
 
 pub use self::{
     native::{
