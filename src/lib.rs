@@ -11,7 +11,7 @@
 //!```
 //!gme = { version = 0.1, default-features = false, features = ["gbs", "nsf"]
 //!```
-//!See [Cargo.toml](Cargo.toml) for all available features. The build logic is in [build.rs](build.rs).
+//!See [Cargo.toml](Cargo.toml) for all available features. The build logic is in [build.rs](build.rs). You can call `gme::type_list()` at runtime for a list of emulators you compiled with.
 //!
 //!## Usage Through Native Functions
 //!
