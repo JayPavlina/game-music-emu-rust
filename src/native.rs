@@ -81,7 +81,6 @@ pub fn type_list() -> Vec<EmuType> {
         while *p != std::ptr::null() {
             let gme_type = p.clone().read();
             let extension = CStr::from_ptr((*gme_type).extension).to_str().unwrap();
-            println!("extension: {}", extension);
             types.push(EmuType::from_extension(extension));
             p = p.offset(1);
         }
@@ -97,7 +96,7 @@ fn process_result(result: *const c_char) -> GmeVoidResult {
     }
 }
 
-fn get_file_data(path: impl AsRef<Path>) -> Vec<u8> {
+pub(crate) fn get_file_data(path: impl AsRef<Path>) -> Vec<u8> {
     let mut file = File::open(path).unwrap();
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).unwrap();

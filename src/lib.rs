@@ -2,8 +2,6 @@
 //!
 //!This crate contains Rust bindings for [Game Music Emu](https://!bitbucket.org/mpyne/game-music-emu/wiki/Home). It is pretty barebones at the moment and does not cover everything, but eventually it will have bindings for most of the functions in [gme.h](./src/gme/gme.h).
 //!
-//!So far, it has only been verified to work with NSF, but it should work with other formats as well.
-//!
 //!## Conditional Compilation
 //!
 //!Just like the regular version of Game Music Emu, you can choose which emulators are included by adding features to your `Cargo.toml`.
@@ -44,10 +42,10 @@
 //!use gme::{EmuType, GameMusicEmu};
 //!
 //!let emu = GameMusicEmu::new(EmuType::Nsf, 44100);
-//!let track_count = emu.track_count();
+//!emu.load_file("test.nsf");
 //!emu.start_track(0);
 //!```
-//!Is it weird that there are two ways to use the API? Maybe. If there is no reason to have both, we could switch to the wrapper version only, but let's see how it goes.
+//! The `GameMusicEmu` struct will eventually be extended to be more than just a wrapper.
 
 #![allow(dead_code, unused_imports, unused_variables, unused_must_use, unused_mut)]
 

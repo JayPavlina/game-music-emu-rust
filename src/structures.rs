@@ -100,6 +100,7 @@ impl Drop for EmuHandle {
     }
 }
 
+/// Contains an error message passed by Game Music Emu
 pub struct GmeError(String);
 
 impl GmeError {

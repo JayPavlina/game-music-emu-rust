@@ -1,35 +1,35 @@
 fn main() {
-    let mut flags = Vec::new();
+    let mut defines = Vec::new();
 
     let ay = cfg!(feature = "ay");
-    if ay { flags.push("USE_GME_AY") }
+    if ay { defines.push("USE_GME_AY") }
 
     let gbs = cfg!(feature = "gbs");
-    if gbs { flags.push("USE_GME_GBS") }
+    if gbs { defines.push("USE_GME_GBS") }
 
     let gym = cfg!(feature = "gym");
-    if gym { flags.push("USE_GME_GYM") }
+    if gym { defines.push("USE_GME_GYM") }
 
     let hes = cfg!(feature = "hes");
-    if hes { flags.push("USE_GME_HES") }
+    if hes { defines.push("USE_GME_HES") }
 
     let kss = cfg!(feature = "kss");
-    if kss { flags.push("USE_GME_KSS") }
+    if kss { defines.push("USE_GME_KSS") }
 
     let nsf = cfg!(feature = "nsf");
-    if nsf { flags.push("USE_GME_NSF") }
+    if nsf { defines.push("USE_GME_NSF") }
 
     let nsfe = cfg!(feature = "nsfe");
-    if nsfe { flags.push("USE_GME_NSFE") }
+    if nsfe { defines.push("USE_GME_NSFE") }
 
     let sap = cfg!(feature = "sap");
-    if sap { flags.push("USE_GME_SAP") }
+    if sap { defines.push("USE_GME_SAP") }
 
     let spc = cfg!(feature = "spc");
-    if spc { flags.push("USE_GME_SPC") }
+    if spc { defines.push("USE_GME_SPC") }
 
     let vgm = cfg!(feature = "vgm");
-    if vgm { flags.push("USE_GME_VGM"); }
+    if vgm { defines.push("USE_GME_VGM"); }
 
     let mut files = Vec::new();
 
@@ -53,13 +53,13 @@ fn main() {
 
     if vgm || gym {
         if cfg!(feature = "ym2612_emu_nuked") {
-            flags.push("VGM_YM2612_NUKED");
+            defines.push("VGM_YM2612_NUKED");
             files.push("Ym2612_Nuked.cpp");
         } else if cfg!(feature = "ym2612_emu_mame") {
-            flags.push("VGM_YM2612_MAME");
+            defines.push("VGM_YM2612_MAME");
             files.push("Ym2612_MAME.cpp");
         } else {
-            flags.push("VGM_YM2612_GENS");
+            defines.push("VGM_YM2612_GENS");
             files.push("Ym2612_GENS.cpp");
         }
     }
@@ -156,7 +156,7 @@ fn main() {
         build.file(format!("src/gme/{}", file));
     }
 
-    for flag in flags {
+    for flag in defines {
         build.flag(&format!("-D {}", flag));
     }
 
