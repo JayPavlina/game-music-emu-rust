@@ -67,9 +67,19 @@ pub fn start_track(handle: &EmuHandle, index: u32) -> GmeVoidResult {
     unsafe { process_result(gme_start_track(handle.to_raw(), index as i32)) }
 }
 
+/// Number of milliseconds played since beginning of track
+pub fn tell(handle: &EmuHandle) -> u32 {
+    unsafe {gme_tell(handle.to_raw()) as u32}
+}
+
 /// Number of tracks available
 pub fn track_count(handle: &EmuHandle) -> usize {
     unsafe { gme_track_count(handle.to_raw()) as usize }
+}
+
+/// True if track ended
+pub fn track_ended(handle: &EmuHandle) -> bool {
+    unsafe { gme_track_ended(handle.to_raw()) }
 }
 
 /// Returns all of the supported `EmuTypes`. This is based on the features the crate is compiled
@@ -152,8 +162,14 @@ extern {
     /// Start a track, where 0 is the first track
     fn gme_start_track(emu: *const MusicEmu, index: i32) -> *const c_char;
 
+    /// Number of milliseconds played since beginning of track
+    fn gme_tell(emu: *const MusicEmu) -> i32;
+
     /// Number of tracks available
     fn gme_track_count(emu: *const MusicEmu) -> i32;
+
+    /// True if a track has reached its end
+    fn gme_track_ended(emu: *const MusicEmu) -> bool;
 
     /// Pointer to array of all music types, with NULL entry at end.
     fn gme_type_list() -> *const gme_type_t;

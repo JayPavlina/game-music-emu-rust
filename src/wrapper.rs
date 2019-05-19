@@ -43,7 +43,13 @@ impl GameMusicEmu {
     }
 
     #[inline]
+    pub fn tell(&self) -> u32 { native::tell(&self.handle) }
+
+    #[inline]
     pub fn track_count(&self) -> usize { native::track_count(&self.handle) }
+
+    #[inline]
+    pub fn track_ended(&self) -> bool { native::track_ended(&self.handle) }
     // endregion
 }
 
