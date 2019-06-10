@@ -1,3 +1,5 @@
+// Note: MSVC is not supported
+
 fn main() {
     let mut defines = Vec::new();
 
@@ -31,9 +33,7 @@ fn main() {
     let vgm = cfg!(feature = "vgm");
     if vgm { defines.push("USE_GME_VGM"); }
 
-    let mut files = Vec::new();
-
-    files.extend_from_slice(&vec![
+    let mut files = vec![
         "Blip_Buffer.cpp",
         "Classic_Emu.cpp",
         "Data_Reader.cpp",
@@ -44,8 +44,8 @@ fn main() {
         "Gme_File.cpp",
         "M3u_Playlist.cpp",
         "Multi_Buffer.cpp",
-        "Music_Emu.cpp"
-    ]);
+        "Music_Emu.cpp",
+    ];
 
     if ay || kss {
         files.push("Ay_Apu.cpp")
@@ -69,14 +69,14 @@ fn main() {
     }
 
     if ay {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Ay_Cpu.cpp",
-            "Ay_Emu.cpp"
+            "Ay_Emu.cpp",
         ]);
     }
 
     if gbs {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Gb_Apu.cpp",
             "Gb_Cpu.cpp",
             "Gb_Oscs.cpp",
@@ -89,7 +89,7 @@ fn main() {
     }
 
     if hes {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Hes_Apu.cpp",
             "Hes_Cpu.cpp",
             "Hes_Emu.cpp"
@@ -97,7 +97,7 @@ fn main() {
     }
 
     if kss {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Kss_Cpu.cpp",
             "Kss_Emu.cpp",
             "Kss_Scc_Apu.cpp",
@@ -106,7 +106,7 @@ fn main() {
 
 
     if nsf || nsfe {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Nes_Apu.cpp",
             "Nes_Cpu.cpp",
             "Nes_Fme7_Apu.cpp",
@@ -122,7 +122,7 @@ fn main() {
     }
 
     if sap {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Sap_Apu.cpp",
             "Sap_Cpu.cpp",
             "Sap_Emu.cpp"
@@ -130,7 +130,7 @@ fn main() {
     }
 
     if spc {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Snes_Spc.cpp",
             "Spc_Cpu.cpp",
             "Spc_Dsp.cpp",
@@ -140,7 +140,7 @@ fn main() {
     }
 
     if vgm {
-        files.extend_from_slice(&vec![
+        files.extend_from_slice(&[
             "Vgm_Emu.cpp",
             "Vgm_Emu_Impl.cpp",
             "Ym2413_Emu.cpp",
@@ -150,6 +150,7 @@ fn main() {
 
     let mut build = cc::Build::new();
     build.cpp(true);
+
     build.flag("-std=c++11");
 
     for file in files {
