@@ -69,8 +69,10 @@ fn main() {
     }
 
     if ay {
-        files.push("Ay_Cpu.cpp");
-        files.push("Ay_Emu.cpp");
+        files.extend_from_slice(&[
+            "Ay_Cpu.cpp",
+            "Ay_Emu.cpp",
+        ]);
     }
 
     if gbs {
