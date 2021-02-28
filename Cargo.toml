@@ -1,6 +1,6 @@
 [package]
-name = "gme"
-version = "0.1.2"
+name = "game-music-emu"
+version = "0.2.0"
 authors = ["Jay Pavlina <jaypavlina@gmail.com>"]
 edition = "2018"
 build = "build.rs"
@@ -28,7 +28,15 @@ ym2612_emu_nuked = []
 ym2612_emu_mame = []
 
 [dependencies]
+err-derive = "0.3"
 libc = "0.2"
 
 [build-dependencies]
 cc = "1.0"
+
+[dev-dependencies]
+cpal = "0.13.1"
+
+[[example]]
+name = "play_nsf"
+path = "examples/play_nsf.rs"

@@ -1,6 +1,7 @@
-use crate::structures::{EmuType, EmuHandle, GmeError, GmeVoidResult};
-use crate::native;
+use crate::emu_type::{EmuType};
+use crate::{native, GmeOrIoError, GmeResult};
 use std::path::Path;
+use crate::native::EmuHandle;
 
 /// Provides a wrapper around native functions that take an `EmuHandle`
 #[derive(Clone)]
@@ -9,55 +10,54 @@ pub struct GameMusicEmu {
 }
 
 impl GameMusicEmu {
-    // region static methods
+    /// Create an instance for the specified [crate::EmuType]
     pub fn new(emu_type: EmuType, sample_rate: u32) -> Self {
         Self { handle: native::new_emu(emu_type, sample_rate) }
     }
 
-    pub fn from_file(path: impl AsRef<Path>, sample_rate: u32) -> Result<GameMusicEmu, GmeError> {
-        Ok(Self{handle: native::open_file(path, sample_rate)?})
+    /// Creates a new instance by loading a file at the specified path
+    pub fn from_file(path: impl AsRef<Path>, sample_rate: u32) -> Result<GameMusicEmu, GmeOrIoError> {
+        Ok(Self { handle: native::open_file(path, sample_rate)? })
     }
 
-    pub fn from_data(data: &[u8], sample_rate: u32) -> Result<GameMusicEmu, GmeError> {
-        Ok(Self{handle: native::open_data(data, sample_rate)?})
+    /// Creates a new instance by loading data at the specified path
+    pub fn from_data(data: impl AsRef<[u8]>, sample_rate: u32) -> GmeResult<GameMusicEmu> {
+        Ok(Self { handle: native::open_data(data.as_ref(), sample_rate)? })
     }
-    // endregion
 
-    // region instance methods
-    #[inline]
-    pub fn load_data(&self, data: &[u8]) -> GmeVoidResult { native::load_data(&self.handle, data) }
+    /// Load music file from memory into emulator. Makes a copy of data passed.
+    pub fn load_data(&self, data: impl AsRef<[u8]>) -> GmeResult<()> { native::load_data(&self.handle, data.as_ref()) }
 
-    #[inline]
-    pub fn load_file(&self, path: impl AsRef<Path>) -> GmeVoidResult {
+    /// Load music file into emulator
+    pub fn load_file(&self, path: impl AsRef<Path>) -> Result<(), GmeOrIoError> {
         native::load_file(&self.handle, path)
     }
 
-    #[inline]
-    pub fn play(&self, count: usize, buffer: &mut [i16]) -> GmeVoidResult {
+    /// Generate `count` 16-bit signed samples into `buffer`. Output is in stereo.
+    pub fn play(&self, count: usize, buffer: &mut [i16]) -> GmeResult<()> {
         native::play(&self.handle, count, buffer)
     }
 
-    #[inline]
-    pub fn start_track(&self, index: u32) -> GmeVoidResult {
-        native::start_track(&self.handle, index)
+    /// Start a track, where 0 is the first track
+    pub fn start_track(&self, index: usize) -> GmeResult<()> {
+        native::start_track(&self.handle, index as _)
     }
 
-    #[inline]
+    /// Number of milliseconds played since beginning of track
     pub fn tell(&self) -> u32 { native::tell(&self.handle) }
 
-    #[inline]
+    /// Number of tracks available
     pub fn track_count(&self) -> usize { native::track_count(&self.handle) }
 
-    #[inline]
+    /// True if track ended
     pub fn track_ended(&self) -> bool { native::track_ended(&self.handle) }
-    // endregion
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Read;
     use std::sync::Arc;
+    use crate::test_utils::*;
 
     #[test]
     fn test_new_emu() {
@@ -67,26 +67,25 @@ mod tests {
 
     #[test]
     fn test_from_file() {
-        let emu = GameMusicEmu::from_file("test.nsf", 44100).ok().unwrap();
+        let emu = GameMusicEmu::from_file(TEST_NSF_PATH, 44100).unwrap();
         assert!(!emu.track_count() > 0);
     }
 
     #[test]
     fn test_from_data() {
-        let data = native::get_file_data("test.nsf");
-        let emulator = GameMusicEmu::from_data(&data, 44100).ok().unwrap();
+        let data = get_test_nsf_data();
+        let emulator = GameMusicEmu::from_data(&data, 44100).unwrap();
         assert!(!emulator.track_count() > 0);
     }
 
     #[test]
     fn test_load_data() {
-        let buffer = native::get_file_data("test.nsf");
+        let buffer = get_test_nsf_data();
         let emulator = GameMusicEmu::new(EmuType::Nsf, 44100);
         let result = emulator.load_data(&vec![1 as u8, 2 as u8, 3 as u8]);
-        assert_eq!("Wrong file type for this emulator", result.err().unwrap().message());
+        assert_eq!(result.err().unwrap().message(), "Wrong file type for this emulator");
         assert_eq!(emulator.track_count(), 0);
-        let result = emulator.load_data(&buffer);
-        assert!(result.is_ok());
+        emulator.load_data(&buffer).unwrap();
         assert_eq!(emulator.track_count(), 1);
     }
 

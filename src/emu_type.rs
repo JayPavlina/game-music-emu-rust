@@ -1,13 +1,3 @@
-use crate::native::MusicEmu;
-use core::borrow::Borrow;
-use std::mem::transmute_copy;
-use std::intrinsics::transmute;
-use std::sync::Arc;
-use crate::native;
-
-pub(crate) type GmeVoidResult = Result<(), GmeError>;
-pub(crate) type GmeHandleResult = Result<EmuHandle, GmeError>;
-
 /// All supported emulator types
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
 pub enum EmuType {
@@ -22,7 +12,7 @@ pub enum EmuType {
     Spc,
     Vgm,
     /// Vgz comes with Vgm
-    Vgz
+    Vgz,
 }
 
 /// File extension for each EmuType
@@ -75,36 +65,4 @@ impl EmuType {
             EmuType::Vgz => extensions::VGZ
         }
     }
-}
-
-/// Holds a pointer to a `MusicEmu` instance in the C++ code. It automatically frees the instance
-/// when dropped.
-#[derive(Clone)]
-pub struct EmuHandle {
-    pub(crate) emu: Arc<MusicEmu>
-}
-
-impl EmuHandle {
-    pub fn new(emu: *const MusicEmu) -> Self {
-        unsafe { Self { emu: Arc::new(transmute(emu)) } }
-    }
-
-    pub(crate) fn to_raw(&self) -> *const MusicEmu { unsafe { transmute_copy(&*self.emu) } }
-}
-
-impl Drop for EmuHandle {
-    fn drop(&mut self) {
-        if Arc::strong_count(&self.emu) == 1 {
-            native::delete(self);
-        }
-    }
-}
-
-/// Contains an error message passed by Game Music Emu
-pub struct GmeError(String);
-
-impl GmeError {
-    pub fn new(message: String) -> Self { Self(message) }
-
-    pub fn message(&self) -> &str { &self.0 }
 }

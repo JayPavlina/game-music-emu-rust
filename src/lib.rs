@@ -4,61 +4,43 @@
 //!
 //!## Conditional Compilation
 //!
-//!Just like the regular version of Game Music Emu, you can choose which emulators are included by adding features to your `Cargo.toml`.
+//!Just like the C++ version of Game Music Emu, you can choose which emulators are included by adding features to your `Cargo.toml`.
 //!
 //!For example, if you only want to use *Nintendo* and *Game Boy* emulators, you'd write:
 //!
-//!```
-//!gme = { version = 0.1, default-features = false, features = ["gbs", "nsf"]
+//!```toml
+//!game-music-emu = { version = "0.1", default-features = false, features = ["gbs", "nsf"] }
 //!```
 //!See [Cargo.toml](Cargo.toml) for all available features. The build logic is in [build.rs](build.rs). You can call `gme::type_list()` at runtime for a list of emulators you compiled with.
 //!
-//!## Usage Through Native Functions
-//!
-//!Functions from [gme.h](./src/gme/gme.h) are exposed at the root level, and can be viewed in [native.rs](src/native.rs). Most of them require an `EmuHandle`, which holds the pointer to a `MusicEmu` instance in the C++ code.
-//!
-//!You can get an `EmuHandle` simply like this:
-//!```rust
-//!let handle = gme::new_emu(gme::EmuType::Nsf, 44100);
-//!```
-//!You can also get a handle by loading a file. This is a convenience function that will create an instance with the file data already loaded.
+//!## Example Usage
 //!
 //!```rust
-//!let handle = gme::open_file("test.nsf", 44100).ok().unwrap();
-//!
-//!```
-//!
-//!Once you have the handle, you can access any of the functions with it:
-//!```rust
-//!let track_count = gme::track_count(&handle);
-//!gme::start_track(&handle, 0);
-//!```
-//!
-//!`EmuHandles` are reference counted and the `MusicEmu` instance they reference is automatically freed when they are dropped.
-//!## Usage Through Wrapper
-//!
-//!Instead of using native functions, you can use the `GameMusicEmu` struct, which provides a wrapper around the functions that take an `EmuHandle`. You can use it like this:
-//!```rust
-//!use gme::{EmuType, GameMusicEmu};
+//!use game_music_emu::{EmuType, GameMusicEmu};
 //!
 //!let emu = GameMusicEmu::new(EmuType::Nsf, 44100);
-//!emu.load_file("test.nsf");
+//!emu.load_file("assets/test.nsf")?;
 //!emu.start_track(0);
+//! # Ok::<(), game_music_emu::GmeOrIoError>(())
 //!```
-//! The `GameMusicEmu` struct will eventually be extended to be more than just a wrapper.
+//!
+//! There is also an [example](examples/play_nsf.rs) that plays a song.
+//!
 
-#![allow(dead_code, unused_imports, unused_variables, unused_must_use, unused_mut, non_camel_case_types)]
+#![deny(unused_must_use)]
 
 pub use self::{
     native::{
-        track_count, type_list, identify_header, load_data, new_emu, open_data, play, start_track
+        type_list, identify_header,
     },
-    structures::{EmuHandle, EmuType},
-    wrapper::GameMusicEmu
+    error::*,
+    emu_type::*,
+    wrapper::{GameMusicEmu},
 };
 
 mod native;
-/// Contains `GameMusicEmu` struct that is still under construction. Use at your own risk.
 mod wrapper;
-mod structures;
+mod emu_type;
+mod error;
+pub mod test_utils;
 
