@@ -39,6 +39,7 @@ pub use self::{
 };
 
 mod native;
+mod rust_impl;
 mod wrapper;
 mod emu_type;
 mod error;

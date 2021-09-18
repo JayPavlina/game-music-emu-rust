@@ -23,6 +23,7 @@ nsfe = []
 sap = []
 spc = []
 vgm = []
+native = []
 # choose one ym2612_emu or none. If none chosen, Ym2612_GENS.cpp is used
 ym2612_emu_nuked = []
 ym2612_emu_mame = []
@@ -40,3 +41,8 @@ cpal = "0.13.1"
 [[example]]
 name = "play_nsf"
 path = "examples/play_nsf.rs"
+
+[[example]]
+name = "play_nsf_native"
+path = "examples/play_nsf_native.rs"
+required-features = ["native", "nsf"]

@@ -3,6 +3,10 @@ use crate::{native, GmeOrIoError, GmeResult};
 use std::path::Path;
 use crate::native::EmuHandle;
 
+pub trait GameMusicEmuBase {
+    fn new(emu_type: EmuType, sample_rate: u32) -> Self;
+}
+
 /// Provides a wrapper around native functions that take an `EmuHandle`
 #[derive(Clone)]
 pub struct GameMusicEmu {
