@@ -23,7 +23,7 @@ nsfe = []
 sap = []
 spc = []
 vgm = []
-native = []
+native = ["bincode", "serde"]
 # choose one ym2612_emu or none. If none chosen, Ym2612_GENS.cpp is used
 ym2612_emu_nuked = []
 ym2612_emu_mame = []
@@ -31,6 +31,8 @@ ym2612_emu_mame = []
 [dependencies]
 err-derive = "0.3"
 libc = "0.2"
+bincode = { version = "1.3.3", optional = true }
+serde = { version = "1.0.130", features = ["derive"], optional = true }
 
 [build-dependencies]
 cc = "1.0"

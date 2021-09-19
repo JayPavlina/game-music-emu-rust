@@ -1,3 +1,5 @@
+use crate::native::{DynamicResult, Sample};
+
 mod blip_buffer;
 mod classic_emu;
 mod data_reader;
@@ -9,12 +11,9 @@ mod m3u_playlist;
 mod multi_buffer;
 mod music_emu;
 
-pub type Sample = i32;
-pub type Int = i32;
-pub type Long = i32;
-pub type Short = i16;
+pub use classic_emu::*;
 
-pub struct NativeMusicEmu {
+pub struct MusicEmu {
     // general
     // equalizer_t equalizer_;
     max_initial_silence: i32,
@@ -47,7 +46,7 @@ pub struct NativeMusicEmu {
     buf: Vec<Sample>
 }
 
-impl NativeMusicEmu {
+impl MusicEmu {
     pub fn set_sample_rate(&mut self) {
 
     }

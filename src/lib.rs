@@ -30,7 +30,7 @@
 #![deny(unused_must_use)]
 
 pub use self::{
-    native::{
+    bridge::{
         type_list, identify_header,
     },
     error::*,
@@ -38,8 +38,8 @@ pub use self::{
     wrapper::{GameMusicEmu},
 };
 
-mod native;
-mod rust_impl;
+mod bridge;
+pub mod native;
 mod wrapper;
 mod emu_type;
 mod error;
