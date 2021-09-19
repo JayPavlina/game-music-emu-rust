@@ -8,10 +8,14 @@ use crate::native::nes::NsfEmu;
 
 pub type DynamicResult<T> = Result<T, Box<dyn std::error::Error>>;
 pub type Sample = i32;
+pub type UInt = u32;
 pub type Int = i32;
 pub type Long = i32;
+pub type ULong = u32;
 pub type Short = i16;
 pub type Byte = u8;
+pub type Double = f64;
+pub type Single = f32;
 
 pub struct NativeGameMusicEmu<T: NativeMusicEmuBase>(Box<T>);
 

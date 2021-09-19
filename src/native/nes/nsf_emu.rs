@@ -1,8 +1,9 @@
-use crate::native::core::{MusicEmu, ClassicEmu};
-use crate::native::{DynamicResult, NativeMusicEmuBase};
+use crate::native::core::{MusicEmu, ClassicEmu, EmuTypeInfo, Equalizer};
+use crate::native::{DynamicResult, NativeMusicEmuBase, Int};
 use std::io::Read;
 use serde::{Deserialize, Serialize};
 use crate::native::nes::nes_apu::NesApu;
+use once_cell::unsync::Lazy;
 
 /// Header for an NSF file
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -50,6 +51,37 @@ pub struct NsfEmu {
 
 impl NsfEmu {
     const BANK_COUNT: usize = 8;
+    const EMU_TYPE_INFO: EmuTypeInfo = EmuTypeInfo {
+        system_name: "Nintendo NES",
+        fixed_track_count: None,
+        extension: "NSF",
+        flags: 1
+    };
+    const NES_EQ: Equalizer = Equalizer::new(-1.0, 80.0);
+    const FAMICOM_EQ: Equalizer = Equalizer::new(-15.0, 80.0);
+
+
+    pub fn new(sample_rate: Int) -> Self {
+        let mut instance = Self {
+            music_emu: MusicEmu::new(sample_rate),
+            classic_emu: Default::default(),
+            apu: Default::default(),
+            header: Default::default()
+        };
+        instance.music_emu.file.type_info = NsfEmu::EMU_TYPE_INFO;
+        instance.music_emu.silence_lookahead = 6;
+        // apu.dmc_reader( pcm_read, this );
+        instance.music_emu.equalizer = NsfEmu::NES_EQ;
+        instance.music_emu.gain = 1.4;
+        unimplemented!();
+        instance
+    }
+
+    pub fn unload(&mut self) {
+        self.music_emu.voice_count = 0;
+        self.music_emu.clear_track_vars();
+        self.music_emu.file.unload();
+    }
 }
 
 impl NativeMusicEmuBase for NsfEmu {

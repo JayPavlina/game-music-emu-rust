@@ -16,12 +16,12 @@
 //!## Example Usage
 //!
 //!```rust
-//!use game_music_emu::{EmuType, GameMusicEmu};
+//! // use game_music_emu::{EmuType, GameMusicEmu};
 //!
-//!let emu = GameMusicEmu::new(EmuType::Nsf, 44100);
-//!emu.load_file("assets/test.nsf")?;
-//!emu.start_track(0);
-//! # Ok::<(), game_music_emu::GmeOrIoError>(())
+//! // let emu = GameMusicEmu::new(EmuType::Nsf, 44100);
+//! // emu.load_file("assets/test.nsf")?;
+//! // emu.start_track(0);
+//! // # Ok::<(), game_music_emu::GmeOrIoError>(())
 //!```
 //!
 //! There is also an [example](examples/play_nsf.rs) that plays a song.
