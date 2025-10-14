@@ -30,17 +30,14 @@
 #![deny(unused_must_use)]
 
 pub use self::{
-    native::{
-        type_list, identify_header,
-    },
-    error::*,
     emu_type::*,
-    wrapper::{GameMusicEmu},
+    error::*,
+    native::{identify_header, type_list},
+    wrapper::GameMusicEmu,
 };
 
-mod native;
-mod wrapper;
 mod emu_type;
 mod error;
+mod native;
 pub mod test_utils;
-
+mod wrapper;

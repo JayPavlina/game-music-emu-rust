@@ -17,17 +17,17 @@ pub enum EmuType {
 
 /// File extension for each EmuType
 mod extensions {
-    pub const AY: &'static str = "AY";
-    pub const GBS: &'static str = "GBS";
-    pub const GYM: &'static str = "GYM";
-    pub const HES: &'static str = "HES";
-    pub const KSS: &'static str = "KSS";
-    pub const NSF: &'static str = "NSF";
-    pub const NSFE: &'static str = "NSFE";
-    pub const SAP: &'static str = "SAP";
-    pub const SPC: &'static str = "SPC";
-    pub const VGM: &'static str = "VGM";
-    pub const VGZ: &'static str = "VGZ";
+    pub const AY: &str = "AY";
+    pub const GBS: &str = "GBS";
+    pub const GYM: &str = "GYM";
+    pub const HES: &str = "HES";
+    pub const KSS: &str = "KSS";
+    pub const NSF: &str = "NSF";
+    pub const NSFE: &str = "NSFE";
+    pub const SAP: &str = "SAP";
+    pub const SPC: &str = "SPC";
+    pub const VGM: &str = "VGM";
+    pub const VGZ: &str = "VGZ";
 }
 
 impl EmuType {
@@ -45,7 +45,7 @@ impl EmuType {
             extensions::SPC => EmuType::Spc,
             extensions::VGM => EmuType::Vgm,
             extensions::VGZ => EmuType::Vgz,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 
@@ -62,7 +62,7 @@ impl EmuType {
             EmuType::Sap => extensions::SAP,
             EmuType::Spc => extensions::SPC,
             EmuType::Vgm => extensions::VGM,
-            EmuType::Vgz => extensions::VGZ
+            EmuType::Vgz => extensions::VGZ,
         }
     }
 }
