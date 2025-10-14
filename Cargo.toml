@@ -2,7 +2,7 @@
 name = "game-music-emu"
 version = "0.2.0"
 authors = ["Jay Pavlina <jaypavlina@gmail.com>"]
-edition = "2018"
+edition = "2024"
 build = "build.rs"
 readme = "README.md"
 license = "MIT AND LGPL-2.1-or-later"

@@ -1,24 +1,30 @@
+use crate::emu_type::EmuType;
+use crate::error::{GmeError, GmeOrIoError, GmeResult};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
-use crate::emu_type::{EmuType};
-use std::path::Path;
-use crate::error::{GmeOrIoError, GmeError, GmeResult};
-use std::sync::Arc;
 use std::mem::{transmute, transmute_copy};
+use std::os::raw::c_char;
+use std::path::Path;
+use std::sync::Arc;
 
 /// Holds a pointer to a `MusicEmu` instance in the C++ code. It automatically frees the instance
 /// when dropped.
 #[derive(Clone)]
 pub(crate) struct EmuHandle {
-    pub(crate) emu: Arc<MusicEmu>
+    pub(crate) emu: Arc<MusicEmu>,
 }
 
 impl EmuHandle {
     pub(crate) fn new(emu: *const MusicEmu) -> Self {
-        unsafe { Self { emu: Arc::new(transmute(emu)) } }
+        unsafe {
+            Self {
+                emu: Arc::new(transmute(emu)),
+            }
+        }
     }
 
-    pub(crate) fn to_raw(&self) -> *const MusicEmu { unsafe { transmute_copy(&*self.emu) } }
+    pub(crate) fn to_raw(&self) -> *const MusicEmu {
+        unsafe { transmute_copy(&*self.emu) }
+    }
 }
 
 impl Drop for EmuHandle {
@@ -30,14 +36,20 @@ impl Drop for EmuHandle {
 }
 
 pub(crate) fn delete(handle: &EmuHandle) {
-    unsafe { gme_delete(handle.to_raw()); }
+    unsafe {
+        gme_delete(handle.to_raw());
+    }
 }
 
 /// Determine likely `EmuType` based on first four bytes of file.
 pub fn identify_header(buffer: &[u8]) -> EmuType {
     unsafe {
-        EmuType::from_extension(&CStr::from_ptr(gme_identify_header(buffer.as_ptr())).to_str()
-            .unwrap().to_string())
+        EmuType::from_extension(
+            &CStr::from_ptr(gme_identify_header(buffer.as_ptr()))
+                .to_str()
+                .unwrap()
+                .to_string(),
+        )
     }
 }
 
@@ -65,7 +77,6 @@ pub(crate) fn new_emu(emu_type: EmuType, sample_rate: u32) -> EmuHandle {
     }
 }
 
-
 pub(crate) fn open_data(data: &[u8], sample_rate: u32) -> GmeResult<EmuHandle> {
     let emu_type = identify_header(data);
     let handle = new_emu(emu_type, sample_rate);
@@ -73,7 +84,10 @@ pub(crate) fn open_data(data: &[u8], sample_rate: u32) -> GmeResult<EmuHandle> {
     Ok(handle)
 }
 
-pub(crate) fn open_file(path: impl AsRef<Path>, sample_rate: u32) -> Result<EmuHandle, GmeOrIoError> {
+pub(crate) fn open_file(
+    path: impl AsRef<Path>,
+    sample_rate: u32,
+) -> Result<EmuHandle, GmeOrIoError> {
     let buffer = get_file_data(path)?;
     Ok(open_data(&buffer, sample_rate)?)
 }
@@ -118,7 +132,11 @@ fn process_result(result: *const c_char) -> GmeResult<()> {
     if result.is_null() {
         Ok(())
     } else {
-        unsafe { Err(GmeError::new(CStr::from_ptr(result).to_str().unwrap().to_string())) }
+        unsafe {
+            Err(GmeError::new(
+                CStr::from_ptr(result).to_str().unwrap().to_string(),
+            ))
+        }
     }
 }
 
@@ -128,7 +146,9 @@ pub(crate) fn get_file_data(path: impl AsRef<Path>) -> std::io::Result<Vec<u8>> 
 
 #[repr(C)]
 #[derive(Clone)]
-pub(crate) struct MusicEmu { _private: isize }
+pub(crate) struct MusicEmu {
+    _private: isize,
+}
 
 // gme_type_t_ is struct
 // gme_type_t holds pointer to other
@@ -152,7 +172,7 @@ pub(crate) struct gme_type_t_struct {
 #[allow(non_camel_case_types)]
 type gme_type_t = *const gme_type_t_struct;
 
-extern {
+unsafe extern "C" {
     /// Finish using emulator and free memory
     fn gme_delete(emu: *const MusicEmu);
 

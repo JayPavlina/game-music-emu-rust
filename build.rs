@@ -4,34 +4,54 @@ fn main() {
     let mut defines = Vec::new();
 
     let ay = cfg!(feature = "ay");
-    if ay { defines.push("USE_GME_AY") }
+    if ay {
+        defines.push("USE_GME_AY")
+    }
 
     let gbs = cfg!(feature = "gbs");
-    if gbs { defines.push("USE_GME_GBS") }
+    if gbs {
+        defines.push("USE_GME_GBS")
+    }
 
     let gym = cfg!(feature = "gym");
-    if gym { defines.push("USE_GME_GYM") }
+    if gym {
+        defines.push("USE_GME_GYM")
+    }
 
     let hes = cfg!(feature = "hes");
-    if hes { defines.push("USE_GME_HES") }
+    if hes {
+        defines.push("USE_GME_HES")
+    }
 
     let kss = cfg!(feature = "kss");
-    if kss { defines.push("USE_GME_KSS") }
+    if kss {
+        defines.push("USE_GME_KSS")
+    }
 
     let nsf = cfg!(feature = "nsf");
-    if nsf { defines.push("USE_GME_NSF") }
+    if nsf {
+        defines.push("USE_GME_NSF")
+    }
 
     let nsfe = cfg!(feature = "nsfe");
-    if nsfe { defines.push("USE_GME_NSFE") }
+    if nsfe {
+        defines.push("USE_GME_NSFE")
+    }
 
     let sap = cfg!(feature = "sap");
-    if sap { defines.push("USE_GME_SAP") }
+    if sap {
+        defines.push("USE_GME_SAP")
+    }
 
     let spc = cfg!(feature = "spc");
-    if spc { defines.push("USE_GME_SPC") }
+    if spc {
+        defines.push("USE_GME_SPC")
+    }
 
     let vgm = cfg!(feature = "vgm");
-    if vgm { defines.push("USE_GME_VGM"); }
+    if vgm {
+        defines.push("USE_GME_VGM");
+    }
 
     let mut files = vec![
         "Blip_Buffer.cpp",
@@ -69,19 +89,11 @@ fn main() {
     }
 
     if ay {
-        files.extend_from_slice(&[
-            "Ay_Cpu.cpp",
-            "Ay_Emu.cpp",
-        ]);
+        files.extend_from_slice(&["Ay_Cpu.cpp", "Ay_Emu.cpp"]);
     }
 
     if gbs {
-        files.extend_from_slice(&[
-            "Gb_Apu.cpp",
-            "Gb_Cpu.cpp",
-            "Gb_Oscs.cpp",
-            "Gbs_Emu.cpp"
-        ]);
+        files.extend_from_slice(&["Gb_Apu.cpp", "Gb_Cpu.cpp", "Gb_Oscs.cpp", "Gbs_Emu.cpp"]);
     }
 
     if gym {
@@ -89,21 +101,12 @@ fn main() {
     }
 
     if hes {
-        files.extend_from_slice(&[
-            "Hes_Apu.cpp",
-            "Hes_Cpu.cpp",
-            "Hes_Emu.cpp"
-        ]);
+        files.extend_from_slice(&["Hes_Apu.cpp", "Hes_Cpu.cpp", "Hes_Emu.cpp"]);
     }
 
     if kss {
-        files.extend_from_slice(&[
-            "Kss_Cpu.cpp",
-            "Kss_Emu.cpp",
-            "Kss_Scc_Apu.cpp",
-        ]);
+        files.extend_from_slice(&["Kss_Cpu.cpp", "Kss_Emu.cpp", "Kss_Scc_Apu.cpp"]);
     }
-
 
     if nsf || nsfe {
         files.extend_from_slice(&[
@@ -113,7 +116,7 @@ fn main() {
             "Nes_Namco_Apu.cpp",
             "Nes_Oscs.cpp",
             "Nes_Vrc6_Apu.cpp",
-            "Nsf_Emu.cpp"
+            "Nsf_Emu.cpp",
         ]);
     }
 
@@ -122,11 +125,7 @@ fn main() {
     }
 
     if sap {
-        files.extend_from_slice(&[
-            "Sap_Apu.cpp",
-            "Sap_Cpu.cpp",
-            "Sap_Emu.cpp"
-        ]);
+        files.extend_from_slice(&["Sap_Apu.cpp", "Sap_Cpu.cpp", "Sap_Emu.cpp"]);
     }
 
     if spc {
@@ -135,18 +134,13 @@ fn main() {
             "Spc_Cpu.cpp",
             "Spc_Dsp.cpp",
             "Spc_Emu.cpp",
-            "Spc_Filter.cpp"
+            "Spc_Filter.cpp",
         ]);
     }
 
     if vgm {
-        files.extend_from_slice(&[
-            "Vgm_Emu.cpp",
-            "Vgm_Emu_Impl.cpp",
-            "Ym2413_Emu.cpp",
-        ]);
+        files.extend_from_slice(&["Vgm_Emu.cpp", "Vgm_Emu_Impl.cpp", "Ym2413_Emu.cpp"]);
     }
-
 
     let mut build = cc::Build::new();
     build.cpp(true);
@@ -158,7 +152,7 @@ fn main() {
     }
 
     for flag in defines {
-        build.flag(&format!("-D {}", flag));
+        build.flag(format!("-D {}", flag));
     }
 
     build.compile("gme");
