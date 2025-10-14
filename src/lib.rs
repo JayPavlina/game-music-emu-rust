@@ -9,7 +9,7 @@
 //!For example, if you only want to use *Nintendo* and *Game Boy* emulators, you'd write:
 //!
 //!```toml
-//!game-music-emu = { version = "0.2", default-features = false, features = ["gbs", "nsf"] }
+//!game-music-emu = { version = "0.3", default-features = false, features = ["gbs", "nsf"] }
 //!```
 //!See [Cargo.toml](Cargo.toml) for all available features. The build logic is in [build.rs](build.rs). You can call `gme::type_list()` at runtime for a list of emulators you compiled with.
 //!
