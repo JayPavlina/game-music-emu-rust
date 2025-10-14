@@ -7,7 +7,7 @@ fn main() {
     let host = cpal::default_host();
     let device = host.default_output_device().unwrap();
     let config = device.default_output_config().unwrap();
-    let sample_rate = config.sample_rate().0 as u32;
+    let sample_rate = config.sample_rate().0;
 
     let game_music_emu = GameMusicEmu::from_file("assets/test.nsf", sample_rate).unwrap();
     game_music_emu.start_track(0).unwrap();
@@ -22,7 +22,7 @@ fn main() {
     };
 
     let stream = match config.sample_format() {
-        SampleFormat::F32 => device.build_output_stream(&config.config(), play_f32, err_fn),
+        SampleFormat::F32 => device.build_output_stream(&config.config(), play_f32, err_fn, None),
         _ => panic!("only implemented for f32"),
     }
     .unwrap();
