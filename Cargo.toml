@@ -28,7 +28,7 @@ ym2612_emu_nuked = []
 ym2612_emu_mame = []
 
 [dependencies]
-err-derive = "0.3"
+thiserror = "1"
 
 [build-dependencies]
 cc = "1.0"
