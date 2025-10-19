@@ -1,8 +1,8 @@
 # Game Music Emu Rust
-[![Game Music Emu Crate](https://img.shields.io/crates/v/gme.svg)](https://crates.io/crates/gme)
-[![Game Music Emu Documentation](https://docs.rs/gme/badge.svg)](https://docs.rs/gme)
+[![Game Music Emu Crate](https://img.shields.io/crates/v/game-music-emu.svg)](https://crates.io/crates/game-music-emu)
+[![Game Music Emu Documentation](https://docs.rs/game-music-emu/badge.svg)](https://docs.rs/game-music-emu)
 
-This crate contains Rust bindings for [Game Music Emu](https://bitbucket.org/mpyne/game-music-emu/wiki/Home).
+This crate contains Rust bindings for [Game Music Emu](https://github.com/libgme/game-music-emu/wiki).
 
 ## Getting Started
 
