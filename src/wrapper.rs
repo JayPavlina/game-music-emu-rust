@@ -1,3 +1,4 @@
+use crate::emu_track_info::EmuTrackInfo;
 use crate::emu_type::EmuType;
 use crate::native::EmuHandle;
 use crate::{GmeOrIoError, GmeResult, native};
@@ -68,6 +69,10 @@ impl GameMusicEmu {
     pub fn track_ended(&self) -> bool {
         native::track_ended(&self.handle)
     }
+
+    pub fn track_info(&self, track: u32) -> GmeResult<EmuTrackInfo> {
+        native::track_info(&self.handle, track)
+    }
 }
 
 #[cfg(test)]
@@ -116,5 +121,22 @@ mod tests {
         assert_eq!(Arc::strong_count(&handle.emu), 1);
         let handle = handle.clone();
         assert_eq!(Arc::strong_count(&handle.emu), 2);
+    }
+
+    #[test]
+    fn test_track_info() {
+        let gme = GameMusicEmu::from_file(TEST_NSF_PATH, 44100).unwrap();
+        let info = gme.track_info(0).unwrap();
+        assert_eq!(info.length, None);
+        assert_eq!(info.intro_length, None);
+        assert_eq!(info.loop_length, None);
+        assert_eq!(info.play_length, 150000);
+        assert_eq!(info.system, Some("Nintendo NES".into()));
+        assert_eq!(info.game, Some("Tetris (GB)".into()));
+        assert_eq!(info.song, Some("".into()));
+        assert_eq!(info.author, Some("".into()));
+        assert_eq!(info.copyright, Some("Nintendo".into()));
+        assert_eq!(info.comment, Some("".into()));
+        assert_eq!(info.dumper, Some("".into()));
     }
 }

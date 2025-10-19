@@ -36,6 +36,7 @@ pub use self::{
     wrapper::GameMusicEmu,
 };
 
+mod emu_track_info;
 mod emu_type;
 mod error;
 mod native;
