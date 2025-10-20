@@ -1,3 +1,4 @@
+use crate::emu_track_info::EmuTrackInfo;
 use crate::emu_type::EmuType;
 use crate::error::{GmeError, GmeOrIoError, GmeResult};
 use std::ffi::{CStr, CString};
@@ -144,6 +145,104 @@ pub(crate) fn get_file_data(path: impl AsRef<Path>) -> std::io::Result<Vec<u8>> 
     std::fs::read(path)
 }
 
+impl From<gme_info_t> for EmuTrackInfo {
+    fn from(info: gme_info_t) -> Self {
+        unsafe {
+            let info_ref = &*info;
+            EmuTrackInfo {
+                length: if info_ref.length >= 0 {
+                    Some(info_ref.length as u32)
+                } else {
+                    None
+                },
+                intro_length: if info_ref.intro_length >= 0 {
+                    Some(info_ref.intro_length as u32)
+                } else {
+                    None
+                },
+                loop_length: if info_ref.loop_length >= 0 {
+                    Some(info_ref.loop_length as u32)
+                } else {
+                    None
+                },
+                play_length: info_ref.play_length as u32,
+                system: if !info_ref.system.is_null() {
+                    Some(
+                        CStr::from_ptr(info_ref.system)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
+                } else {
+                    None
+                },
+                game: if !info_ref.game.is_null() {
+                    Some(CStr::from_ptr(info_ref.game).to_string_lossy().into_owned())
+                } else {
+                    None
+                },
+                song: if !info_ref.song.is_null() {
+                    Some(CStr::from_ptr(info_ref.song).to_string_lossy().into_owned())
+                } else {
+                    None
+                },
+                author: if !info_ref.author.is_null() {
+                    Some(
+                        CStr::from_ptr(info_ref.author)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
+                } else {
+                    None
+                },
+                copyright: if !info_ref.copyright.is_null() {
+                    Some(
+                        CStr::from_ptr(info_ref.copyright)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
+                } else {
+                    None
+                },
+                comment: if !info_ref.comment.is_null() {
+                    Some(
+                        CStr::from_ptr(info_ref.comment)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
+                } else {
+                    None
+                },
+                dumper: if !info_ref.dumper.is_null() {
+                    Some(
+                        CStr::from_ptr(info_ref.dumper)
+                            .to_string_lossy()
+                            .into_owned(),
+                    )
+                } else {
+                    None
+                },
+            }
+        }
+    }
+}
+
+pub(crate) fn track_info(handle: &EmuHandle, track: u32) -> GmeResult<EmuTrackInfo> {
+    unsafe {
+        let mut info_ptr: gme_info_t = std::ptr::null_mut();
+        let err = gme_track_info(handle.to_raw(), &mut info_ptr, track as i32);
+        process_result(err)?;
+        let info = EmuTrackInfo::from(info_ptr);
+        free_info(info_ptr);
+        Ok(info)
+    }
+}
+
+pub(crate) fn free_info(info: gme_info_t) {
+    unsafe {
+        gme_free_info(info);
+    }
+}
+
 #[repr(C)]
 #[derive(Clone)]
 pub(crate) struct MusicEmu {
@@ -171,6 +270,48 @@ pub(crate) struct gme_type_t_struct {
 //#[derive(Debug, Copy, Clone)]
 #[allow(non_camel_case_types)]
 type gme_type_t = *const gme_type_t_struct;
+
+#[repr(C)]
+pub(crate) struct gme_info_t_struct {
+    pub length: i32,
+    pub intro_length: i32,
+    pub loop_length: i32,
+    pub play_length: i32,
+    /* reserved */
+    pub i4: i32,
+    pub i5: i32,
+    pub i6: i32,
+    pub i7: i32,
+    pub i8: i32,
+    pub i9: i32,
+    pub i10: i32,
+    pub i11: i32,
+    pub i12: i32,
+    pub i13: i32,
+    pub i14: i32,
+    pub i15: i32,
+
+    pub system: *const c_char,
+    pub game: *const c_char,
+    pub song: *const c_char,
+    pub author: *const c_char,
+    pub copyright: *const c_char,
+    pub comment: *const c_char,
+    pub dumper: *const c_char,
+    /* reserved */
+    pub s7: *const c_char,
+    pub s8: *const c_char,
+    pub s9: *const c_char,
+    pub s10: *const c_char,
+    pub s11: *const c_char,
+    pub s12: *const c_char,
+    pub s13: *const c_char,
+    pub s14: *const c_char,
+    pub s15: *const c_char,
+}
+
+#[allow(non_camel_case_types)]
+type gme_info_t = *mut gme_info_t_struct;
 
 unsafe extern "C" {
     /// Finish using emulator and free memory
@@ -207,6 +348,12 @@ unsafe extern "C" {
 
     /// Pointer to array of all music types, with NULL entry at end.
     fn gme_type_list() -> *const gme_type_t;
+
+    /// Get track info for specified track
+    fn gme_track_info(emu: *const MusicEmu, out: *mut gme_info_t, track: i32) -> *const c_char;
+
+    /// Free track info structure
+    fn gme_free_info(info: gme_info_t);
 }
 
 #[cfg(test)]
@@ -232,5 +379,39 @@ mod tests {
         let handle = open_file(TEST_NSF_PATH, 44100).unwrap();
         assert_eq!(track_count(&handle), 1);
         start_track(&handle, 0).unwrap();
+    }
+
+    #[test]
+    fn test_track_info() {
+        let handle = open_data(&get_test_nsf_data(), 44100).unwrap();
+        unsafe {
+            let mut info_ptr: gme_info_t = std::ptr::null_mut();
+            let err = gme_track_info(handle.to_raw(), &mut info_ptr, 0);
+            assert!(err.is_null());
+            let info = &*info_ptr;
+            let length = info.length;
+            let intro_length = info.intro_length;
+            let loop_length = info.loop_length;
+            let play_length = info.play_length;
+            let system = CStr::from_ptr(info.system).to_str().unwrap();
+            let game = CStr::from_ptr(info.game).to_str().unwrap();
+            let song = CStr::from_ptr(info.song).to_str().unwrap();
+            let author = CStr::from_ptr(info.author).to_str().unwrap();
+            let copyright = CStr::from_ptr(info.copyright).to_str().unwrap();
+            let comment = CStr::from_ptr(info.comment).to_str().unwrap();
+            let dumper = CStr::from_ptr(info.dumper).to_str().unwrap();
+            assert_eq!(length, -1);
+            assert_eq!(intro_length, -1);
+            assert_eq!(loop_length, -1);
+            assert_eq!(play_length, 150000);
+            assert_eq!(system, "Nintendo NES");
+            assert_eq!(game, "Tetris (GB)");
+            assert_eq!(song, "");
+            assert_eq!(author, "");
+            assert_eq!(copyright, "Nintendo");
+            assert_eq!(comment, "");
+            assert_eq!(dumper, "");
+            gme_free_info(info_ptr);
+        }
     }
 }
