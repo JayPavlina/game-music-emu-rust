@@ -104,7 +104,7 @@ mod tests {
     fn test_load_data() {
         let buffer = get_test_nsf_data();
         let emulator = GameMusicEmu::new(EmuType::Nsf, 44100);
-        let result = emulator.load_data(&vec![1 as u8, 2 as u8, 3 as u8]);
+        let result = emulator.load_data(vec![1_u8, 2, 3]);
         assert_eq!(
             result.err().unwrap().message(),
             "Wrong file type for this emulator"
