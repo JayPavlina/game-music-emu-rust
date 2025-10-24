@@ -1,5 +1,3 @@
-// Note: MSVC is not supported
-
 fn main() {
     let mut defines = Vec::new();
 
@@ -145,14 +143,26 @@ fn main() {
     let mut build = cc::Build::new();
     build.cpp(true);
 
-    build.flag("-std=c++11");
+    // Detect target environment so we don't pass GNU-style flags to MSVC's cl.exe.
+    let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
+
+    if target_env == "msvc" {
+        // MSVC: enable C++ exception handling model if supported.
+        build.flag_if_supported("/EHsc");
+    } else {
+        // Pass C++11 for GNU/Clang toolchains when supported.
+        build.flag_if_supported("-std=c++11");
+        // Suppress some noisy warnings from upstream C++ code when supported.
+        build.flag_if_supported("-Wno-implicit-fallthrough");
+    }
 
     for file in files {
         build.file(format!("src/gme/{}", file));
     }
 
+    // Use cc crate's define API so it maps to the correct compiler flags on each toolchain.
     for flag in defines {
-        build.flag(format!("-D {}", flag));
+        build.define(flag, None);
     }
 
     build.compile("gme");
