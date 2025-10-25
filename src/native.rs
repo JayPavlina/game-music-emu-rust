@@ -1,3 +1,4 @@
+use crate::emu_equalizer::EmuEqualizer;
 use crate::emu_track_info::EmuTrackInfo;
 use crate::emu_type::EmuType;
 use crate::error::{GmeError, GmeOrIoError, GmeResult};
@@ -242,6 +243,57 @@ pub(crate) fn free_info(info: gme_info_t) {
     }
 }
 
+pub(crate) fn equalizer(handle: &EmuHandle) -> EmuEqualizer {
+    let mut gme_eq = gme_equalizer_t {
+        treble: 0.0,
+        bass: 0.0,
+        d2: 0.0,
+        d3: 0.0,
+        d4: 0.0,
+        d5: 0.0,
+        d6: 0.0,
+        d7: 0.0,
+        d8: 0.0,
+        d9: 0.0,
+    };
+    unsafe {
+        gme_equalizer(handle.to_raw(), &mut gme_eq);
+    }
+    EmuEqualizer::from(gme_eq)
+}
+
+pub(crate) fn set_equalizer(handle: &EmuHandle, eq: EmuEqualizer) -> GmeResult<()> {
+    let gme_eq = gme_equalizer_t {
+        treble: eq.treble,
+        bass: eq.bass,
+        d2: 0.0,
+        d3: 0.0,
+        d4: 0.0,
+        d5: 0.0,
+        d6: 0.0,
+        d7: 0.0,
+        d8: 0.0,
+        d9: 0.0,
+    };
+    unsafe {
+        gme_set_equalizer(handle.to_raw(), &gme_eq);
+    }
+    Ok(())
+}
+
+pub(crate) fn enable_accuracy(handle: &EmuHandle, enable: bool) {
+    unsafe { gme_enable_accuracy(handle.to_raw(), enable as i32) }
+}
+
+impl From<gme_equalizer_t> for EmuEqualizer {
+    fn from(gme_eq: gme_equalizer_t) -> Self {
+        Self {
+            treble: gme_eq.treble,
+            bass: gme_eq.bass,
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Clone)]
 pub(crate) struct MusicEmu {
@@ -312,6 +364,24 @@ pub(crate) struct gme_info_t_struct {
 #[allow(non_camel_case_types)]
 type gme_info_t = *mut gme_info_t_struct;
 
+#[repr(C)]
+pub(crate) struct gme_equalizer_t_struct {
+    pub treble: f64,
+    pub bass: f64,
+    /* reserved */
+    pub d2: f64,
+    pub d3: f64,
+    pub d4: f64,
+    pub d5: f64,
+    pub d6: f64,
+    pub d7: f64,
+    pub d8: f64,
+    pub d9: f64,
+}
+
+#[allow(non_camel_case_types)]
+type gme_equalizer_t = gme_equalizer_t_struct;
+
 unsafe extern "C" {
     /// Finish using emulator and free memory
     fn gme_delete(emu: *const MusicEmu);
@@ -353,6 +423,12 @@ unsafe extern "C" {
 
     /// Free track info structure
     fn gme_free_info(info: gme_info_t);
+
+    fn gme_equalizer(emu: *const MusicEmu, out: *mut gme_equalizer_t);
+
+    fn gme_set_equalizer(emu: *const MusicEmu, eq: *const gme_equalizer_t);
+
+    fn gme_enable_accuracy(emu: *const MusicEmu, enable: i32);
 }
 
 #[cfg(test)]
@@ -412,5 +488,17 @@ mod tests {
             assert_eq!(dumper, "");
             gme_free_info(info_ptr);
         }
+    }
+
+    #[test]
+    fn test_equalizer() {
+        let handle = open_file(TEST_NSF_PATH, 44100).unwrap();
+        let eq1 = equalizer(&handle);
+        assert_eq!(eq1.bass, 80.0);
+        let mut eq2 = eq1.clone();
+        eq2.bass = 30.0;
+        set_equalizer(&handle, eq2).unwrap();
+        let eq3 = equalizer(&handle);
+        assert_eq!(eq3.bass, 30.0);
     }
 }
