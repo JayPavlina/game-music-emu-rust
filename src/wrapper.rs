@@ -1,3 +1,4 @@
+use crate::emu_equalizer::EmuEqualizer;
 use crate::emu_track_info::EmuTrackInfo;
 use crate::emu_type::EmuType;
 use crate::native::EmuHandle;
@@ -109,6 +110,18 @@ impl GameMusicEmu {
     pub fn track_info(&self, track: u32) -> GmeResult<EmuTrackInfo> {
         native::track_info(&self.handle, track)
     }
+
+    pub fn equalizer(&self) -> EmuEqualizer {
+        native::equalizer(&self.handle)
+    }
+
+    pub fn set_equalizer(&self, eq: EmuEqualizer) -> GmeResult<()> {
+        native::set_equalizer(&self.handle, eq)
+    }
+
+    pub fn enable_accuracy(&self, enable: bool) {
+        native::enable_accuracy(&self.handle, enable)
+    }
 }
 
 #[cfg(test)]
@@ -189,5 +202,17 @@ mod tests {
         assert_eq!(info.copyright, Some("Nintendo".into()));
         assert_eq!(info.comment, Some("".into()));
         assert_eq!(info.dumper, Some("".into()));
+    }
+
+    #[test]
+    fn test_equalizer() {
+        let gme = GameMusicEmu::from_file(TEST_NSF_PATH, 44100).unwrap();
+        let eq1 = gme.equalizer();
+        assert_eq!(eq1.bass, 80.0);
+        let mut eq2 = eq1.clone();
+        eq2.bass = 30.0;
+        gme.set_equalizer(eq2).unwrap();
+        let eq3 = gme.equalizer();
+        assert_eq!(eq3.bass, 30.0);
     }
 }
