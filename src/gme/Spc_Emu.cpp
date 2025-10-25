@@ -5,6 +5,7 @@
 #include "blargg_endian.h"
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 /* Copyright (C) 2004-2006 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
@@ -19,17 +20,20 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA */
 
 #include "blargg_source.h"
 
+using std::min;
+using std::max;
+
 // TODO: support Spc_Filter's bass
 
 Spc_Emu::Spc_Emu()
 {
 	set_type( gme_spc_type );
-	
+
 	static const char* const names [Snes_Spc::voice_count] = {
 		"DSP 1", "DSP 2", "DSP 3", "DSP 4", "DSP 5", "DSP 6", "DSP 7", "DSP 8"
 	};
 	set_voice_names( names );
-	
+
 	set_gain( 1.4 );
 }
 
@@ -37,11 +41,12 @@ Spc_Emu::~Spc_Emu() { }
 
 // Track info
 
-long const trailer_offset = 0x10200;
+static long const spc_size = Snes_Spc::spc_file_size;
+static long const head_size = Spc_Emu::header_size;
 
-byte const* Spc_Emu::trailer() const { return &file_data [min( file_size, trailer_offset )]; }
+byte const* Spc_Emu::trailer() const { return &file_data [min( file_size, spc_size )]; }
 
-long Spc_Emu::trailer_size() const { return max( 0L, file_size - trailer_offset ); }
+long Spc_Emu::trailer_size() const { return max( 0L, file_size - spc_size ); }
 
 static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 {
@@ -53,18 +58,18 @@ static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 		return;
 	}
 	long info_size = get_le32( begin + 4 );
-	byte const* in = begin + 8; 
+	byte const* in = begin + 8;
 	if ( end - in > info_size )
 	{
 		debug_printf( "Extra data after SPC xid6 info\n" );
 		end = in + info_size;
 	}
-	
+
 	int year = 0;
 	char copyright [256 + 5];
 	int copyright_len = 0;
 	int const year_len = 5;
-	
+
 	while ( end - in >= 4 )
 	{
 		// header
@@ -78,7 +83,7 @@ static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 			check( false );
 			break; // block goes past end of data
 		}
-		
+
 		// handle specific block types
 		char* field = 0;
 		switch ( id )
@@ -89,7 +94,7 @@ static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 			case 0x04: field = out->dumper;  break;
 			case 0x07: field = out->comment; break;
 			case 0x14: year = data;          break;
-			
+
 			//case 0x30: // intro length
 			// Many SPCs have intro length set wrong for looped tracks, making it useless
 			/*
@@ -107,12 +112,12 @@ static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 				}
 				break;
 			*/
-			
+
 			case 0x13:
 				copyright_len = min( len, (int) sizeof copyright - year_len );
 				memcpy( &copyright [year_len], in, copyright_len );
 				break;
-			
+
 			default:
 				if ( id < 0x01 || (id > 0x07 && id < 0x10) ||
 						(id > 0x14 && id < 0x30) || id > 0x36 )
@@ -124,10 +129,10 @@ static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 			check( type == 1 );
 			Gme_File::copy_field_( field, (char const*) in, len );
 		}
-		
+
 		// skip to next block
 		in += len;
-		
+
 		// blocks are supposed to be 4-byte aligned with zero-padding...
 		byte const* unaligned = in;
 		while ( (in - begin) & 3 && in < end )
@@ -141,7 +146,7 @@ static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 			}
 		}
 	}
-	
+
 	char* p = &copyright [year_len];
 	if ( year )
 	{
@@ -155,18 +160,17 @@ static void get_spc_xid6( byte const* begin, long size, track_info_t* out )
 	}
 	if ( copyright_len )
 		Gme_File::copy_field_( out->copyright, p, copyright_len );
-	
+
 	check( in == end );
 }
 
-static void get_spc_info( Spc_Emu::header_t const& h, byte const* xid6, long xid6_size,
-		track_info_t* out )
+static long decode_length( Spc_Emu::header_t const& h, byte const* tag, int size )
 {
 	// decode length (can be in text or binary format, sometimes ambiguous ugh)
 	long len_secs = 0;
-	for ( int i = 0; i < 3; i++ )
+	for ( int i = 0; i < size; i++ )
 	{
-		unsigned n = h.len_secs [i] - '0';
+		unsigned n = tag [i] - '0';
 		if ( n > 9 )
 		{
 			// ignore single-digit text lengths
@@ -178,19 +182,28 @@ static void get_spc_info( Spc_Emu::header_t const& h, byte const* xid6, long xid
 		len_secs *= 10;
 		len_secs += n;
 	}
+	return len_secs;
+}
+
+static void get_spc_info( Spc_Emu::header_t const& h, byte const* xid6, long xid6_size,
+		track_info_t* out )
+{
+	long len_secs = decode_length( h, h.len_secs, 3 );
 	if ( !len_secs || len_secs > 0x1FFF )
 		len_secs = get_le16( h.len_secs );
 	if ( len_secs < 0x1FFF )
 		out->length = len_secs * 1000;
-	
+
+	out->fade_length = decode_length( h, h.fade_msec, 4 );
+
 	int offset = (h.author [0] < ' ' || unsigned (h.author [0] - '0') <= 9);
 	Gme_File::copy_field_( out->author, &h.author [offset], sizeof h.author - offset );
-	
+
 	GME_COPY_FIELD( h, out, song );
 	GME_COPY_FIELD( h, out, game );
 	GME_COPY_FIELD( h, out, dumper );
 	GME_COPY_FIELD( h, out, comment );
-	
+
 	if ( xid6_size )
 		get_spc_xid6( xid6, xid6_size, out );
 }
@@ -212,27 +225,26 @@ struct Spc_File : Gme_Info_
 {
 	Spc_Emu::header_t header;
 	blargg_vector<byte> xid6;
-	
+
 	Spc_File() { set_type( gme_spc_type ); }
-	
+
 	blargg_err_t load_( Data_Reader& in )
 	{
 		long file_size = in.remain();
 		if ( file_size < Snes_Spc::spc_min_file_size )
 			return gme_wrong_file_type;
-		RETURN_ERR( in.read( &header, Spc_Emu::header_size ) );
+		RETURN_ERR( in.read( &header, head_size ) );
 		RETURN_ERR( check_spc_header( header.tag ) );
-		long const xid6_offset = 0x10200;
-		long xid6_size = file_size - xid6_offset;
+		long xid6_size = file_size - spc_size;
 		if ( xid6_size > 0 )
 		{
 			RETURN_ERR( xid6.resize( xid6_size ) );
-			RETURN_ERR( in.skip( xid6_offset - Spc_Emu::header_size ) );
+			RETURN_ERR( in.skip( spc_size - head_size ) );
 			RETURN_ERR( in.read( xid6.begin(), xid6.size() ) );
 		}
 		return 0;
 	}
-	
+
 	blargg_err_t track_info_( track_info_t* out, int ) const
 	{
 		get_spc_info( header, xid6.begin(), xid6.size(), out );
@@ -244,7 +256,7 @@ static Music_Emu* new_spc_emu () { return BLARGG_NEW Spc_Emu ; }
 static Music_Emu* new_spc_file() { return BLARGG_NEW Spc_File; }
 
 static gme_type_t_ const gme_spc_type_ = { "Super Nintendo", 1, &new_spc_emu, &new_spc_file, "SPC", 0 };
-BLARGG_EXPORT extern gme_type_t const gme_spc_type = &gme_spc_type_;
+extern gme_type_t const gme_spc_type = &gme_spc_type_;
 
 
 // Setup
@@ -273,9 +285,14 @@ void Spc_Emu::mute_voices_( int m )
 	apu.mute_voices( m );
 }
 
+void Spc_Emu::disable_echo_( bool disable )
+{
+	apu.disable_echo( disable );
+}
+
 blargg_err_t Spc_Emu::load_mem_( byte const* in, long size )
 {
-	assert( offsetof (header_t,unused2 [46]) == header_size );
+	blaarg_static_assert( offsetof (header_t,unused2 [46]) == header_size, "SPC Header layout incorrect!" );
 	file_data = in;
 	file_size = size;
 	set_voice_count( Snes_Spc::voice_count );
@@ -301,8 +318,9 @@ blargg_err_t Spc_Emu::start_track_( int track )
 	apu.clear_echo();
 	track_info_t spc_info;
 	RETURN_ERR( track_info_( &spc_info, track ) );
+
 	// Set a default track length, need a non-zero fadeout
-	if ( spc_info.length > 0 )
+	if ( autoload_playback_limit() && ( spc_info.length > 0 ) )
 		set_fade ( spc_info.length, 50 );
 	return 0;
 }
@@ -321,15 +339,15 @@ blargg_err_t Spc_Emu::skip_( long count )
 		count = long (count * resampler.ratio()) & ~1;
 		count -= resampler.skip_input( count );
 	}
-	
+
 	// TODO: shouldn't skip be adjusted for the 64 samples read afterwards?
-	
+
 	if ( count > 0 )
 	{
 		RETURN_ERR( apu.skip( count ) );
 		filter.clear();
 	}
-	
+
 	// eliminate pop due to resampler
 	const int resampler_latency = 64;
 	sample_t buf [resampler_latency];
@@ -340,7 +358,7 @@ blargg_err_t Spc_Emu::play_( long count, sample_t* out )
 {
 	if ( sample_rate() == native_sample_rate )
 		return play_and_filter( count, out );
-	
+
 	long remain = count;
 	while ( remain > 0 )
 	{
