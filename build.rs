@@ -110,10 +110,12 @@ fn main() {
         files.extend_from_slice(&[
             "Nes_Apu.cpp",
             "Nes_Cpu.cpp",
+            "Nes_Fds_Apu.cpp",
             "Nes_Fme7_Apu.cpp",
             "Nes_Namco_Apu.cpp",
             "Nes_Oscs.cpp",
             "Nes_Vrc6_Apu.cpp",
+            "Nes_Vrc7_Apu.cpp",
             "Nsf_Emu.cpp",
         ]);
     }
@@ -149,11 +151,13 @@ fn main() {
     if target_env == "msvc" {
         // MSVC: enable C++ exception handling model if supported.
         build.flag_if_supported("/EHsc");
+        // Suppress all C++ warnings
+        build.flag_if_supported("/w");
     } else {
         // Pass C++11 for GNU/Clang toolchains when supported.
         build.flag_if_supported("-std=c++11");
-        // Suppress some noisy warnings from upstream C++ code when supported.
-        build.flag_if_supported("-Wno-implicit-fallthrough");
+        // Suppress all C++ warnings
+        build.flag("-w");
     }
 
     for file in files {
@@ -165,5 +169,25 @@ fn main() {
         build.define(flag, None);
     }
 
+    // Define endianness for the C++ code
+    build.define("BLARGG_LITTLE_ENDIAN", "1");
+
     build.compile("gme");
+
+    // Compile C files separately (for emu2413.c and panning.c used by VRC7) to avoid C++ name mangling
+    if nsf || nsfe {
+        let mut c_build = cc::Build::new();
+        c_build.file("src/gme/ext/emu2413.c");
+        c_build.file("src/gme/ext/panning.c");
+
+        // Suppress C warnings too
+        if target_env == "msvc" {
+            c_build.flag_if_supported("/w");
+        } else {
+            c_build.flag("-w");
+        }
+
+        c_build.define("BLARGG_LITTLE_ENDIAN", "1");
+        c_build.compile("emu2413");
+    }
 }
