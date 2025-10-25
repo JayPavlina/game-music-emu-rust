@@ -2,7 +2,6 @@ use crate::emu_track_info::EmuTrackInfo;
 use crate::emu_type::EmuType;
 use crate::error::{GmeError, GmeOrIoError, GmeResult};
 use std::ffi::{CStr, CString};
-use std::mem::{transmute, transmute_copy};
 use std::os::raw::c_char;
 use std::path::Path;
 use std::sync::Arc;
@@ -16,15 +15,16 @@ pub(crate) struct EmuHandle {
 
 impl EmuHandle {
     pub(crate) fn new(emu: *const MusicEmu) -> Self {
+        #[allow(clippy::crosspointer_transmute)]
         unsafe {
             Self {
-                emu: Arc::new(transmute(emu)),
+                emu: Arc::new(std::mem::transmute::<*const MusicEmu, MusicEmu>(emu)),
             }
         }
     }
 
     pub(crate) fn to_raw(&self) -> *const MusicEmu {
-        unsafe { transmute_copy(&*self.emu) }
+        unsafe { std::mem::transmute_copy(&*self.emu) }
     }
 }
 
@@ -46,10 +46,9 @@ pub(crate) fn delete(handle: &EmuHandle) {
 pub fn identify_header(buffer: &[u8]) -> EmuType {
     unsafe {
         EmuType::from_extension(
-            &CStr::from_ptr(gme_identify_header(buffer.as_ptr()))
+            CStr::from_ptr(gme_identify_header(buffer.as_ptr()))
                 .to_str()
-                .unwrap()
-                .to_string(),
+                .unwrap(),
         )
     }
 }
@@ -119,8 +118,8 @@ pub fn type_list() -> Vec<EmuType> {
     let mut types = Vec::new();
     unsafe {
         let mut p = gme_type_list();
-        while *p != std::ptr::null() {
-            let gme_type = p.clone().read();
+        while !(*p).is_null() {
+            let gme_type = p.read();
             let extension = CStr::from_ptr((*gme_type).extension).to_str().unwrap();
             types.push(EmuType::from_extension(extension));
             p = p.offset(1);
