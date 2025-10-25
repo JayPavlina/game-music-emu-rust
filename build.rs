@@ -154,6 +154,9 @@ fn main() {
         build.flag_if_supported("-std=c++11");
         // Suppress some noisy warnings from upstream C++ code when supported.
         build.flag_if_supported("-Wno-implicit-fallthrough");
+        // Suppress override-related warnings
+        build.flag_if_supported("-Wno-inconsistent-missing-override");
+        build.flag_if_supported("-Wno-unused-const-variable");
     }
 
     for file in files {
