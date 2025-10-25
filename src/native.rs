@@ -112,6 +112,49 @@ pub(crate) fn track_ended(handle: &EmuHandle) -> bool {
     unsafe { gme_track_ended(handle.to_raw()) }
 }
 
+pub(crate) fn seek(handle: &EmuHandle, msec: u32) -> GmeResult<()> {
+    unsafe { process_result(gme_seek(handle.to_raw(), msec as i32)) }
+}
+
+pub(crate) fn set_fade(handle: &EmuHandle, start_msec: u32) {
+    unsafe { gme_set_fade(handle.to_raw(), start_msec as i32) }
+}
+
+pub(crate) fn set_stereo_depth(handle: &EmuHandle, depth: f64) {
+    unsafe { gme_set_stereo_depth(handle.to_raw(), depth) }
+}
+
+pub(crate) fn ignore_silence(handle: &EmuHandle, ignore: bool) {
+    unsafe { gme_ignore_silence(handle.to_raw(), ignore as i32) }
+}
+
+pub(crate) fn set_tempo(handle: &EmuHandle, tempo: f64) {
+    unsafe { gme_set_tempo(handle.to_raw(), tempo) }
+}
+
+pub(crate) fn mute_voice(handle: &EmuHandle, index: u32, mute: bool) {
+    unsafe { gme_mute_voice(handle.to_raw(), index as i32, mute as i32) }
+}
+
+pub(crate) fn mute_voices(handle: &EmuHandle, mask: i32) {
+    unsafe { gme_mute_voices(handle.to_raw(), mask) }
+}
+
+pub(crate) fn voice_count(handle: &EmuHandle) -> u32 {
+    unsafe { gme_voice_count(handle.to_raw()) as u32 }
+}
+
+pub(crate) fn voice_name(handle: &EmuHandle, index: u32) -> Option<String> {
+    unsafe {
+        let ptr = gme_voice_name(handle.to_raw(), index as i32);
+        if ptr.is_null() {
+            None
+        } else {
+            Some(CStr::from_ptr(ptr).to_string_lossy().into_owned())
+        }
+    }
+}
+
 /// Returns all of the supported `EmuTypes`. This is based on the features the crate is compiled
 /// with.
 pub fn type_list() -> Vec<EmuType> {
@@ -348,11 +391,41 @@ unsafe extern "C" {
     /// Pointer to array of all music types, with NULL entry at end.
     fn gme_type_list() -> *const gme_type_t;
 
-    /// Get track info for specified track
-    fn gme_track_info(emu: *const MusicEmu, out: *mut gme_info_t, track: i32) -> *const c_char;
+    /// Seek to specified position in milliseconds
+    fn gme_seek(emu: *const MusicEmu, msec: i32) -> *const c_char;
+
+    /// Set fade parameters
+    fn gme_set_fade(emu: *const MusicEmu, start_msec: i32);
+
+    /// Adjust stereo echo depth, where 0.0 = off and 1.0 = maximum. Has no effect for
+    /// GYM, SPC, and Sega Genesis VGM music
+    fn gme_set_stereo_depth(emu: *const MusicEmu, depth: f64);
+
+    /// Disable automatic end-of-track detection and skipping of silence at beginning
+    /// if ignore is true
+    fn gme_ignore_silence(emu: *const MusicEmu, ignore: i32);
+
+    /// Set tempo multiplier (1.0 = normal speed)
+    fn gme_set_tempo(emu: *const MusicEmu, tempo: f64);
+
+    /// Mute or unmute a specific voice
+    fn gme_mute_voice(emu: *const MusicEmu, index: i32, mute: i32);
+
+    /// Set muting state of all voices at once using a bit mask, where -1 mutes all
+    /// voices, 0 unmutes them all, 0x01 mutes just the first voice, etc.
+    fn gme_mute_voices(emu: *const MusicEmu, mask: i32);
+
+    /// Get number of voices available in current track
+    fn gme_voice_count(emu: *const MusicEmu) -> i32;
+
+    /// Get name of specified voice
+    fn gme_voice_name(emu: *const MusicEmu, index: i32) -> *const c_char;
 
     /// Free track info structure
     fn gme_free_info(info: gme_info_t);
+
+    /// Get track info for specified track
+    fn gme_track_info(emu: *const MusicEmu, out: *mut gme_info_t, track: i32) -> *const c_char;
 }
 
 #[cfg(test)]
@@ -370,6 +443,8 @@ mod tests {
     fn test_open_data() {
         let handle = open_data(&get_test_nsf_data(), 44100).unwrap();
         assert_eq!(track_count(&handle), 1);
+        assert_eq!(voice_count(&handle), 5);
+        assert_eq!(voice_name(&handle, 0).as_deref(), Some("Square 1"));
         start_track(&handle, 0).unwrap();
     }
 
@@ -377,7 +452,17 @@ mod tests {
     fn test_open_file() {
         let handle = open_file(TEST_NSF_PATH, 44100).unwrap();
         assert_eq!(track_count(&handle), 1);
+        assert_eq!(voice_count(&handle), 5);
+        assert_eq!(voice_name(&handle, 0).as_deref(), Some("Square 1"));
         start_track(&handle, 0).unwrap();
+    }
+
+    #[test]
+    fn test_seek_and_tell() {
+        let handle = open_data(&get_test_nsf_data(), 44100).unwrap();
+        start_track(&handle, 0).unwrap();
+        seek(&handle, 10000).unwrap();
+        assert!(tell(&handle) >= 10000);
     }
 
     #[test]
