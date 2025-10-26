@@ -269,6 +269,30 @@ impl From<gme_info_t> for EmuTrackInfo {
     }
 }
 
+pub(crate) fn load_m3u(handle: &EmuHandle, path: impl AsRef<Path>) -> GmeResult<()> {
+    let cstring = CString::new(
+        path.as_ref()
+            .to_str()
+            .ok_or_else(|| GmeError::new("Invalid path".into()))?,
+    )
+    .map_err(|e| GmeError::new(format!("Failed to convert path to CString: {}", e)))?;
+    unsafe { process_result(gme_load_m3u(handle.to_raw(), cstring.as_ptr())) }
+}
+
+pub(crate) fn load_m3u_data(handle: &EmuHandle, data: &[u8]) -> GmeResult<()> {
+    unsafe {
+        process_result(gme_load_m3u_data(
+            handle.to_raw(),
+            data.as_ptr(),
+            data.len(),
+        ))
+    }
+}
+
+pub(crate) fn clear_playlist(handle: &EmuHandle) {
+    unsafe { gme_clear_playlist(handle.to_raw()) }
+}
+
 pub(crate) fn track_info(handle: &EmuHandle, track: u32) -> GmeResult<EmuTrackInfo> {
     unsafe {
         let mut info_ptr: gme_info_t = std::ptr::null_mut();
@@ -491,11 +515,20 @@ unsafe extern "C" {
     /// Get name of specified voice
     fn gme_voice_name(emu: *const MusicEmu, index: i32) -> *const c_char;
 
-    /// Free track info structure
-    fn gme_free_info(info: gme_info_t);
+    /// Load M3U playlist file
+    fn gme_load_m3u(emu: *const MusicEmu, path: *const c_char) -> *const c_char;
+
+    /// Load M3U playlist data from memory
+    fn gme_load_m3u_data(emu: *const MusicEmu, data: *const u8, size: usize) -> *const c_char;
+
+    /// Clear loaded playlist
+    fn gme_clear_playlist(emu: *const MusicEmu);
 
     /// Get track info for specified track
     fn gme_track_info(emu: *const MusicEmu, out: *mut gme_info_t, track: i32) -> *const c_char;
+
+    /// Free track info structure
+    fn gme_free_info(info: gme_info_t);
 
     /// Get current equalizer settings
     fn gme_equalizer(emu: *const MusicEmu, out: *mut gme_equalizer_t);
@@ -542,6 +575,22 @@ mod tests {
         start_track(&handle, 0).unwrap();
         seek(&handle, 10000).unwrap();
         assert!(tell(&handle) >= 10000);
+    }
+
+    #[test]
+    fn test_open_m3u_data() {
+        let handle = open_file(TEST_NSF_PATH, 44100).unwrap();
+        assert_eq!(track_count(&handle), 1);
+        load_m3u_data(&handle, &get_test_m3u_data()).unwrap();
+        clear_playlist(&handle);
+    }
+
+    #[test]
+    fn test_open_m3u_file() {
+        let handle = open_file(TEST_NSF_PATH, 44100).unwrap();
+        assert_eq!(track_count(&handle), 1);
+        load_m3u(&handle, TEST_M3U_PATH).unwrap();
+        clear_playlist(&handle);
     }
 
     #[test]

@@ -107,6 +107,18 @@ impl GameMusicEmu {
         native::voice_name(&self.handle, index)
     }
 
+    pub fn load_m3u(&self, path: impl AsRef<Path>) -> GmeResult<()> {
+        native::load_m3u(&self.handle, path)
+    }
+
+    pub fn load_m3u_data(&self, data: impl AsRef<[u8]>) -> GmeResult<()> {
+        native::load_m3u_data(&self.handle, data.as_ref())
+    }
+
+    pub fn clear_playlist(&self) {
+        native::clear_playlist(&self.handle);
+    }
+
     pub fn track_info(&self, track: u32) -> GmeResult<EmuTrackInfo> {
         native::track_info(&self.handle, track)
     }
@@ -185,6 +197,22 @@ mod tests {
         gme.start_track(0).unwrap();
         gme.seek(10000).unwrap();
         assert!(gme.tell() >= 10000);
+    }
+
+    #[test]
+    fn test_load_m3u() {
+        let emu = GameMusicEmu::from_file(TEST_NSF_PATH, 44100).unwrap();
+        assert_eq!(emu.track_count(), 1);
+        emu.load_m3u(TEST_M3U_PATH).unwrap();
+        emu.clear_playlist();
+    }
+
+    #[test]
+    fn test_load_m3u_data() {
+        let emu = GameMusicEmu::from_file(TEST_NSF_PATH, 44100).unwrap();
+        assert_eq!(emu.track_count(), 1);
+        emu.load_m3u_data(get_test_m3u_data()).unwrap();
+        emu.clear_playlist();
     }
 
     #[test]
