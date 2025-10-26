@@ -70,6 +70,42 @@ impl GameMusicEmu {
         native::track_ended(&self.handle)
     }
 
+    pub fn seek(&self, msec: u32) -> GmeResult<()> {
+        native::seek(&self.handle, msec)
+    }
+
+    pub fn set_fade(&self, start_msec: u32) {
+        native::set_fade(&self.handle, start_msec)
+    }
+
+    pub fn set_stereo_depth(&self, depth: f64) {
+        native::set_stereo_depth(&self.handle, depth)
+    }
+
+    pub fn ignore_silence(&self, ignore: bool) {
+        native::ignore_silence(&self.handle, ignore)
+    }
+
+    pub fn set_tempo(&self, tempo: f64) {
+        native::set_tempo(&self.handle, tempo)
+    }
+
+    pub fn mute_voice(&self, voice: u32, mute: bool) {
+        native::mute_voice(&self.handle, voice, mute)
+    }
+
+    pub fn mute_voices(&self, mask: i32) {
+        native::mute_voices(&self.handle, mask)
+    }
+
+    pub fn voice_count(&self) -> u32 {
+        native::voice_count(&self.handle)
+    }
+
+    pub fn voice_name(&self, index: u32) -> Option<String> {
+        native::voice_name(&self.handle, index)
+    }
+
     pub fn track_info(&self, track: u32) -> GmeResult<EmuTrackInfo> {
         native::track_info(&self.handle, track)
     }
@@ -91,6 +127,8 @@ mod tests {
     fn test_from_file() {
         let emu = GameMusicEmu::from_file(TEST_NSF_PATH, 44100).unwrap();
         assert!(!emu.track_count() > 0);
+        assert!(!emu.voice_count() > 0);
+        assert_eq!(emu.voice_name(0).as_deref(), Some("Square 1"));
     }
 
     #[test]
@@ -98,6 +136,8 @@ mod tests {
         let data = get_test_nsf_data();
         let emulator = GameMusicEmu::from_data(&data, 44100).unwrap();
         assert!(!emulator.track_count() > 0);
+        assert!(!emulator.voice_count() > 0);
+        assert_eq!(emulator.voice_name(0).as_deref(), Some("Square 1"));
     }
 
     #[test]
@@ -110,8 +150,11 @@ mod tests {
             "Wrong file type for this emulator"
         );
         assert_eq!(emulator.track_count(), 0);
+        assert_eq!(emulator.voice_count(), 0);
         emulator.load_data(&buffer).unwrap();
         assert_eq!(emulator.track_count(), 1);
+        assert_eq!(emulator.voice_count(), 5);
+        assert_eq!(emulator.voice_name(0).as_deref(), Some("Square 1"));
     }
 
     #[test]
@@ -121,6 +164,14 @@ mod tests {
         assert_eq!(Arc::strong_count(&handle.emu), 1);
         let handle = handle.clone();
         assert_eq!(Arc::strong_count(&handle.emu), 2);
+    }
+
+    #[test]
+    fn test_seek_and_tell() {
+        let gme = GameMusicEmu::from_file(TEST_NSF_PATH, 44100).unwrap();
+        gme.start_track(0).unwrap();
+        gme.seek(10000).unwrap();
+        assert!(gme.tell() >= 10000);
     }
 
     #[test]
