@@ -99,7 +99,12 @@ fn main() {
     }
 
     if hes {
-        files.extend_from_slice(&["Hes_Apu.cpp", "Hes_Cpu.cpp", "Hes_Emu.cpp"]);
+        files.extend_from_slice(&[
+            "Hes_Apu.cpp",
+            "Hes_Cpu.cpp",
+            "Hes_Emu.cpp",
+            "Hes_Apu_Adpcm.cpp",
+        ]);
     }
 
     if kss {
@@ -174,11 +179,10 @@ fn main() {
 
     build.compile("gme");
 
-    // Compile C files separately (for emu2413.c and panning.c used by VRC7) to avoid C++ name mangling
+    // Compile C files separately (for emu2413.c used by VRC7) to avoid C++ name mangling
     if nsf || nsfe {
         let mut c_build = cc::Build::new();
         c_build.file("src/gme/ext/emu2413.c");
-        c_build.file("src/gme/ext/panning.c");
 
         // Suppress C warnings too
         if target_env == "msvc" {

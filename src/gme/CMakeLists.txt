@@ -118,6 +118,8 @@ if(USE_GME_HES)
     list(APPEND libgme_SRCS
                 Hes_Apu.cpp
                 Hes_Apu.h
+                Hes_Apu_Adpcm.cpp
+                Hes_Apu_Adpcm.h
                 Hes_Cpu.cpp
                 Hes_Cpu.h
                 Hes_Emu.cpp
@@ -159,11 +161,6 @@ if(USE_GME_NSF OR USE_GME_NSFE)
                 Nes_Vrc7_Apu.h
                 ext/emu2413.c
                 ext/emu2413.h
-                ext/panning.c
-                ext/panning.h
-                ext/emutypes.h
-                ext/2413tone.h
-                ext/vrc7tone.h
                 Nsf_Emu.cpp
                 Nsf_Emu.h
         )
@@ -333,7 +330,7 @@ elseif(UNIX)
     execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${temporary_sym_file}" "${generated_sym_file}")
 
     cmake_push_check_state()
-    set(CMAKE_REQUIRED_FLAGS "-Wl,-version-script='${generated_sym_file}'")
+    set(CMAKE_REQUIRED_FLAGS "-Wl,-version-script=\"${generated_sym_file}\"")
     check_cxx_source_compiles("int main() { return 0;}" LINKER_SUPPORTS_VERSION_SCRIPT)
     cmake_pop_check_state()
 endif()
@@ -401,7 +398,7 @@ if(GME_BUILD_SHARED)
         set_property(TARGET gme_shared APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-exported_symbols_list,'${generated_sym_file}'")
         set_property(TARGET gme_shared APPEND PROPERTY LINK_DEPENDS "${generated_sym_file}")
     elseif(UNIX AND LINKER_SUPPORTS_VERSION_SCRIPT)
-        set_property(TARGET gme_shared APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-version-script='${generated_sym_file}'")
+        set_property(TARGET gme_shared APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-version-script=\"${generated_sym_file}\"")
         set_property(TARGET gme_shared APPEND PROPERTY LINK_DEPENDS "${generated_sym_file}")
     endif()
 
