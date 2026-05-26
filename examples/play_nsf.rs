@@ -6,18 +6,39 @@ fn main() {
     let err_fn = |err| eprintln!("an error occurred on the output audio stream: {}", err);
     let host = cpal::default_host();
     let device = host.default_output_device().unwrap();
+    println!(
+        "Output device: {}",
+        device.name().unwrap_or_else(|_| "unknown".to_string())
+    );
     let config = device.default_output_config().unwrap();
     let sample_rate = config.sample_rate().0;
+    println!("Default output config: {:?}", config);
+    println!("Sample rate: {} Hz", sample_rate);
 
     let game_music_emu = GameMusicEmu::from_file("assets/test.nsf", sample_rate).unwrap();
     game_music_emu.start_track(0).unwrap();
+    println!("Stream config: {:?}", config.config());
 
+    let channels = config.channels() as usize;
     let play_f32 = move |output_buffer: &mut [f32], _: &cpal::OutputCallbackInfo| {
-        let len = output_buffer.len();
-        let mut emu_buffer = vec![0i16; len];
-        game_music_emu.play(len, &mut emu_buffer).unwrap();
-        for (sample, &emu_sample) in output_buffer.iter_mut().zip(&emu_buffer) {
-            *sample = emu_sample as f32 / i16::MAX as f32;
+        let frame_count = output_buffer.len() / channels;
+        let emu_sample_count = frame_count * 2; // emulator outputs stereo
+        let mut emu_buffer = vec![0i16; emu_sample_count];
+        game_music_emu
+            .play(emu_sample_count, &mut emu_buffer)
+            .unwrap();
+
+        for frame in 0..frame_count {
+            let left = emu_buffer[frame * 2] as f32 / i16::MAX as f32;
+            let right = emu_buffer[frame * 2 + 1] as f32 / i16::MAX as f32;
+            let base = frame * channels;
+            output_buffer[base] = left;
+            if channels > 1 {
+                output_buffer[base + 1] = right;
+            }
+            for ch in 2..channels {
+                output_buffer[base + ch] = 0.0;
+            }
         }
     };
 
