@@ -1,0 +1,14 @@
+[package]
+name = "gme-gbs"
+version = "0.1.0"
+edition.workspace = true
+license = "MIT"
+repository.workspace = true
+description = "Game Boy GBS music emulator for game-music-emu"
+
+[dependencies]
+gme-core.workspace = true
+gme-common.workspace = true
+
+[dev-dependencies]
+game-music-emu-wrapper.workspace = true

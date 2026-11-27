@@ -1,6 +1,10 @@
 /target
 **/*.rs.bk
-*.idea
+.DS_Store
+.idea/
+.vscode/
 Cargo.lock
 
-/.vscode
+# Copyrighted test assets (local only)
+assets/zelda1.nsf
+assets/cv3.nsf
