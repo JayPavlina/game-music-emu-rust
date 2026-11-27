@@ -1,6 +1,7 @@
 [package]
 name = "game-music-emu-wrapper"
 version = "0.3.0"
+publish = false
 authors = ["Jay Pavlina <jaypavlina@gmail.com>"]
 edition.workspace = true
 build = "build.rs"

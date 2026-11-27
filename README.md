@@ -76,22 +76,16 @@ EQ and stereo enhancement apply to AY, GBS, HES, KSS, NSF/NSFE, SAP, and VGM/VGZ
 | Read metadata or a collection | `new_info_only(format)` loads tags without starting audio. `load_reader` accepts any `std::io::Read`. `load_tracks` combines same-format GYM, SPC, or VGM/VGZ files as tracks. `warning()` takes the latest nonfatal warning. |
 | Select a Genesis FM core | Enable `ym2612_emu_gens` or `ym2612_emu_mame` alongside GYM or VGM, then call `GameMusicEmu::new_with_ym2612(format, rate, Ym2612Backend::Gens)` or select `Mame`. Both features can coexist. Linking MAME brings GPL-2.0-or-later terms. |
 
-Applications that use the original binding signatures can keep their existing imports by aliasing the wrapper in Cargo.
-
-```toml
-game-music-emu = { package = "game-music-emu-wrapper", version = "0.3" }
-```
-
 ## C++ Wrapper
 
-This workspace also includes `game-music-emu-wrapper`, which provides Rust bindings for the original C++ Game Music Emu library. The C++ wrapper is 10-15% faster than the pure Rust version in most benchmarks, so it may be preferred if you need maximum performance or want the original C++ API:
+The workspace uses `game-music-emu-wrapper` to compare Rust playback against the original C++ implementation. The wrapper requires a C/C++ toolchain and runs 10–15% faster than the pure Rust version in most project benchmarks.
+
+Applications that need the original binding signatures can use the wrapper from a local checkout and keep their existing imports. Adjust the path to point to your checkout.
 
 ```toml
 [dependencies]
-game-music-emu-wrapper = "0.3"
+game-music-emu = { package = "game-music-emu-wrapper", path = "../game-music-emu-rust/crates/game-music-emu-wrapper" }
 ```
-
-The C++ wrapper requires a C/C++ toolchain to build.
 
 ## License
 
