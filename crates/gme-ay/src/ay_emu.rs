@@ -36,14 +36,13 @@ const VOICE_NAMES: [&str; OSC_COUNT] = ["Wave 1", "Wave 2", "Wave 3", "Beeper"];
 /// the file blob. The offset is signed 16-bit, relative to the field's own
 /// position. Returns None for zero offsets or out-of-range targets.
 fn get_data(data: &[u8], ptr: usize, min_size: usize) -> Option<usize> {
-    let file_size = data.len() as i32;
-    debug_assert!(ptr as i32 <= file_size - 2);
-    let offset = i16::from_be_bytes([data[ptr], data[ptr + 1]]) as i32;
-    let pos = ptr as i32 + offset;
-    if offset == 0 || (pos as u32) > (file_size - min_size as i32) as u32 {
+    let field = data.get(ptr..)?.first_chunk::<2>()?;
+    let offset = i16::from_be_bytes(*field);
+    if offset == 0 {
         return None;
     }
-    Some(pos as usize)
+    let target = ptr.checked_add_signed(isize::from(offset))?;
+    (data.get(target..)?.len() >= min_size).then_some(target)
 }
 
 fn get_be16(data: &[u8], pos: usize) -> u16 {
@@ -518,7 +517,6 @@ impl MusicEmulator for AyEmu {
                     self.ram[addr..addr + len].copy_from_slice(&file[input..input + len]);
                 }
                 None => {
-                    // C++ would read from a null pointer here; treat as no data.
                     self.state.set_warning("Missing file data");
                 }
             }
@@ -786,5 +784,23 @@ impl MusicEmulator for AyEmu {
 
     fn voice_names(&self) -> &[&str] {
         &VOICE_NAMES
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_data;
+
+    #[test]
+    fn relative_offsets_require_a_complete_field_and_target() {
+        let data = [0, 2, 0xff, 0xfe];
+        assert_eq!(get_data(&data, 0, 2), Some(2));
+        assert_eq!(get_data(&data, 2, 4), Some(0));
+        assert_eq!(get_data(&data, 3, 0), None);
+        assert_eq!(get_data(&data, 4, 0), None);
+        assert_eq!(get_data(&data, 0, 3), None);
+        assert_eq!(get_data(&[0xff, 0xff], 0, 0), None);
+        assert_eq!(get_data(&[0, 0], 0, 0), None);
+        assert_eq!(get_data(&[0, 2], 0, 0), Some(2));
     }
 }

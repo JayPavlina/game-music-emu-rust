@@ -1,3 +1,4 @@
+// Updated ADPCM cycle count type, 2026-11-27.
 // Game_Music_Emu https://bitbucket.org/mpyne/game-music-emu/
 
 #include "Hes_Emu.h"
@@ -301,7 +302,7 @@ void Hes_Emu::cpu_write_( hes_addr_t addr, int data )
 
 	if ( (unsigned) (addr - adpcm.io_addr) < adpcm.io_size )
 	{
-		time_t t = min( time(), end_time() + 6 );
+		hes_time_t t = min( time(), end_time() + 6 );
 		adpcm.write_data( t, addr, data );
 		return;
 	}

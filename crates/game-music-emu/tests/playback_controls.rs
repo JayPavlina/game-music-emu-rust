@@ -27,6 +27,16 @@ fn fade_ends_each_format_and_restart_cancels_it() {
     }
 }
 
+#[cfg(feature = "ay")]
+#[test]
+fn ay_load_rejects_an_incomplete_track_table() {
+    let mut header = std::fs::read(asset("ay")).unwrap();
+    header.truncate(0x14);
+    header[0x10] = 7; // Eight four-byte entries are required.
+    assert!(GameMusicEmu::from_data(&header, 44100).is_err());
+    assert!(game_music_emu_wrapper::GameMusicEmu::from_data(&header, 44100).is_err());
+}
+
 #[cfg(feature = "nsf")]
 #[test]
 fn typed_reload_playlist_and_metadata() {
