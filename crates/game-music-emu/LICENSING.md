@@ -4,7 +4,7 @@ The Rust playback API, examples, and original project code are available under t
 
 ## Source and feature coverage
 
-`game-music-emu` declares MIT for its facade source. Its normal dependencies always include `gme-common` and `gme-core`, even with default features disabled. Every playback format uses LGPL-covered implementations. Each engine and decoder crate declares `MIT AND LGPL-2.1-or-later` for its combination of original project files and translated sources.
+`game-music-emu` declares MIT for its facade source. Its normal dependencies always include `gme-common` and `gme-core`, even with default features disabled. Every playback format uses LGPL-covered implementations. Each shared engine and format decoder crate declares `MIT AND LGPL-2.1-or-later` for its combination of original project files and translated sources.
 
 | Cargo package or feature | Upstream components in the Rust implementation |
 | --- | --- |
@@ -20,7 +20,7 @@ The Rust playback API, examples, and original project code are available under t
 | `spc` | Spc_Emu, Snes_Spc, Spc_Cpu, Spc_Dsp and Spc_Filter |
 | `vgm` | Vgm_Emu, Vgm_Emu_Impl, Dual_Resampler, Sms_Apu and Nuked OPN2. VGZ uses the same decoder. |
 
-The Nuked OPN2 port in `gme-vgm/src/ym2612_nuked.rs` derives from Alexey Khokholov’s 2017 YM3438 core under LGPL-2.1-or-later. VGM and GYM use it for YM2612 sound. The OPLL core in `gme-core/src/emu2413.rs` derives from Mitsutaka Okazaki’s MIT-licensed emu2413 1.5.9. The original license credits 2001–2019 and the C source credits 2020. Its complete permission notice ships as `LICENSE-emu2413` in `gme-core`. NSF uses this core for VRC7, and VGM uses it for YM2413. [Game_Music_Emu upstream notices](https://github.com/libgme/game-music-emu/blob/8238afd9503a59ffcec0e2685584d5ce819ad7c6/readme.txt#L235-L240) · [emu2413](https://github.com/digital-sound-antiques/emu2413)
+The Nuked OPN2 port in `gme-vgm/src/ym2612_nuked.rs` derives from Alexey Khokholov’s 2017 YM3438 core under LGPL-2.1-or-later. VGM and GYM use it by default. The optional Rust GENS translation also uses LGPL-2.1-or-later and credits Stéphane Dallongeville and Shay Green. The OPLL core in `gme-core/src/emu2413.rs` derives from Mitsutaka Okazaki’s MIT-licensed emu2413 1.5.9. The original license credits 2001–2019 and the C source credits 2020. Its complete permission notice ships as `LICENSE-emu2413` in `gme-core`. NSF uses this core for VRC7, and VGM uses it for YM2413. [Game_Music_Emu upstream notices](https://github.com/libgme/game-music-emu/blob/8238afd9503a59ffcec0e2685584d5ce819ad7c6/readme.txt#L235-L240) · [emu2413](https://github.com/digital-sound-antiques/emu2413)
 
 ## Shipping a game or player
 
@@ -28,4 +28,4 @@ Commercial distribution is permitted. When distributing a game linked with the L
 
 For a statically linked game, one route under LGPL 2.1 §6(a) is to provide the complete corresponding source of the LGPL library, including your changes, along with relinkable application object files or application source and the build inputs needed to produce the executable with a modified library. Test that the supplied materials actually relink with a modified library, especially if you enable link-time optimization. Section 6 also provides other routes, including a suitable replaceable shared library under §6(b). [LGPL 2.1, sections 2, 4 and 6](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html#section6)
 
-The optional C++ wrapper has a separate MAME YM2612 backend under GPL-2.0-or-later. The pure Rust playback crates use Nuked. Test music and third-party Cargo dependencies carry their own terms.
+Enabling `ym2612_emu_mame` for Rust GYM or VGM links the optional `gme-ym2612-mame` package, a GPL-2.0-or-later translation of the MAME core by Jarek Burczynski and Tatsuyuki Satoh with Genesis Plus GX changes. Distribution of the combined executable must satisfy the applicable GPL terms, including corresponding source. The same terms apply to the C++ wrapper built with MAME. Test music and third-party Cargo dependencies carry their own terms.

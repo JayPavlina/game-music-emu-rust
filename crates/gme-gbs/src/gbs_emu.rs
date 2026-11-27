@@ -243,11 +243,11 @@ impl GmeFile for GbsEmu {
         }
 
         if self.header.vers != 1 {
-            // Warning: unknown version
+            self.state.set_warning("Unknown file version");
         }
 
         if self.header.timer_mode & 0x78 != 0 {
-            // Warning: invalid timer mode
+            self.state.set_warning("Invalid timer mode");
         }
 
         let load_addr = self.header.load_addr;
@@ -256,7 +256,7 @@ impl GmeFile for GbsEmu {
             || (self.header.play_addr >> 8) > 0x7F
             || load_addr < 0x400
         {
-            // Warning: invalid addresses
+            self.state.set_warning("Invalid load/init/play address");
         }
 
         self.emu_state.voice_count = 4; // Square 1, Square 2, Wave, Noise
@@ -351,8 +351,9 @@ impl MusicEmulator for GbsEmu {
 
         // C++ Music_Emu::start_track: play until non-silence or end of track
         if !self.emu_state.ignore_silence_flag {
-            let end =
-                self.emu_state.max_initial_silence as i64 * 2 * self.emu_state.sample_rate as i64;
+            let end = self.emu_state.max_initial_silence as i64
+                * i64::from(self.emu_state.out_channels())
+                * self.emu_state.sample_rate as i64;
             while (self.emu_state.emu_time as i64) < end {
                 self.fill_buf()?;
                 if self.emu_state.buf_remain > 0 || self.emu_state.emu_track_ended {
@@ -377,8 +378,7 @@ impl MusicEmulator for GbsEmu {
 
         if !self.buf_initialized || self.emu_state.track_ended {
             out[..out_count].fill(0);
-            self.emu_state.out_time += count;
-            self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+            self.emu_state.advance_output(count);
             return Ok(());
         }
 
@@ -404,7 +404,9 @@ impl MusicEmulator for GbsEmu {
 
             if !self.emu_state.ignore_silence_flag
                 && self.emu_state.emu_time as i64 - self.emu_state.silence_time
-                    > SILENCE_MAX_SECS * 2 * self.emu_state.sample_rate as i64
+                    > SILENCE_MAX_SECS
+                        * i64::from(self.emu_state.out_channels())
+                        * self.emu_state.sample_rate as i64
             {
                 self.emu_state.track_ended = true;
                 self.emu_state.emu_track_ended = true;
@@ -463,15 +465,13 @@ impl MusicEmulator for GbsEmu {
             self.emu_state.emu_track_ended = true;
         }
 
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
         Ok(())
     }
 
     /// Transliteration of C++ Music_Emu::skip / Music_Emu::skip_.
     fn skip_impl(&mut self, count: i32) -> GmeResult {
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
 
         let mut count = count;
 
@@ -527,6 +527,15 @@ impl MusicEmulator for GbsEmu {
         let eq = BlipEq::new(settings.treble);
         self.apu.treble_eq(&eq);
         self.stereo_buf.bass_freq(settings.bass as i32);
+    }
+
+    fn enable_multi_channel(&mut self) -> GmeResult {
+        if self.emu_state.sample_rate != 0 {
+            return Err("Output already initialized".into());
+        }
+        self.stereo_buf = EffectsBuffer::new(8, false);
+        self.emu_state.multi_channel = true;
+        Ok(())
     }
 
     fn set_stereo_depth_impl(&mut self, depth: f64) {
@@ -690,7 +699,8 @@ impl GbsEmu {
                 } else if self.cpu.r.pc > 0xFFFF {
                     self.cpu.r.pc &= 0xFFFF;
                 } else {
-                    // Illegal opcode — skip
+                    self.state
+                        .set_warning("Emulation error (illegal/unsupported instruction)");
                     self.cpu.r.pc = (self.cpu.r.pc + 1) & 0xFFFF;
                     self.cpu_time += 6;
                 }

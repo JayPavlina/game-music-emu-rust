@@ -19,7 +19,7 @@ use crate::dual_resampler::DualResampler;
 use crate::header::{self, HEADER_SIZE, VGM_MIN_FILE_SIZE, VGM_RATE, VgmHeader};
 use crate::sms_apu::SmsApu;
 use crate::ym2413::Ym2413;
-use crate::ym2612_nuked::Ym2612NukedEmu;
+use crate::ym2612::Ym2612;
 
 const STEREO: usize = 2;
 const SILENCE_BUF_SIZE: i64 = 2048;
@@ -76,7 +76,7 @@ const FM_VOICE_NAMES: [&str; 8] = ["FM 1", "FM 2", "FM 3", "FM 4", "FM 5", "FM 6
 /// frame's FM output buffer. The pointer is wired per frame in `begin_frame`,
 /// so moving `VgmEmu` between frames is safe.
 struct YmEmu {
-    emu: Ym2612NukedEmu,
+    emu: Ym2612,
     last_time: i32,
     out: *mut i16,
 }
@@ -86,7 +86,7 @@ const YM_DISABLED_TIME: i32 = -1;
 impl YmEmu {
     fn new() -> Self {
         Self {
-            emu: Ym2612NukedEmu::new(),
+            emu: Ym2612::default(),
             last_time: YM_DISABLED_TIME,
             out: std::ptr::null_mut(),
         }
@@ -115,11 +115,8 @@ impl YmEmu {
             self.last_time = time;
             let p = self.out;
             unsafe {
-                self.out = p.add(count as usize * Ym2612NukedEmu::OUT_CHAN_COUNT);
-                let buf = std::slice::from_raw_parts_mut(
-                    p,
-                    count as usize * Ym2612NukedEmu::OUT_CHAN_COUNT,
-                );
+                self.out = p.add(count as usize * 2);
+                let buf = std::slice::from_raw_parts_mut(p, count as usize * 2);
                 self.emu.run(count, buf);
             }
         }
@@ -300,12 +297,12 @@ impl VgmEmu {
             }
             self.ym2612[0]
                 .emu
-                .set_rate(self.fm_rate, ym2612_rate as f64);
+                .set_rate(self.fm_rate, ym2612_rate as f64)?;
             self.ym2612[0].enable(true);
             if ym2612_dual {
                 self.ym2612[1]
                     .emu
-                    .set_rate(self.fm_rate, ym2612_rate as f64);
+                    .set_rate(self.fm_rate, ym2612_rate as f64)?;
                 self.ym2612[1].enable(true);
             }
         }
@@ -392,6 +389,9 @@ impl VgmEmu {
         let mut pos = self.pos;
 
         if pos >= self.data_end {
+            if pos > self.data_end {
+                self.state.set_warning("Stream lacked end event");
+            }
             self.emu_state.emu_track_ended = true;
         }
 
@@ -562,6 +562,7 @@ impl VgmEmu {
                             pos += 2;
                         }
                         _ => {
+                            self.state.set_warning("Unknown stream event");
                             let len = command_len(cmd);
                             pos += len - 1;
                         }
@@ -874,6 +875,12 @@ impl MusicEmulator for VgmEmu {
         Format::Vgm
     }
 
+    fn select_ym2612(&mut self, backend: gme_common::music_emu::Ym2612Backend) -> GmeResult {
+        for chip in &mut self.ym2612 {
+            chip.emu = Ym2612::select(backend)?;
+        }
+        Ok(())
+    }
     fn set_sample_rate_impl(&mut self, sample_rate: i32) -> GmeResult {
         self.emu_state.sample_rate = sample_rate;
         // C++ Vgm_Emu::set_sample_rate_: FM blip buffer uses 1000/30 ms
@@ -996,8 +1003,7 @@ impl MusicEmulator for VgmEmu {
 
         if !self.buf_initialized || self.emu_state.track_ended {
             out[..out_count].fill(0);
-            self.emu_state.out_time += count;
-            self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+            self.emu_state.advance_output(count);
             return Ok(());
         }
 
@@ -1079,15 +1085,13 @@ impl MusicEmulator for VgmEmu {
             self.emu_state.emu_track_ended = true;
         }
 
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
         Ok(())
     }
 
     /// Transliteration of C++ Music_Emu::skip / Music_Emu::skip_.
     fn skip_impl(&mut self, count: i32) -> GmeResult {
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
 
         let mut count = count;
 

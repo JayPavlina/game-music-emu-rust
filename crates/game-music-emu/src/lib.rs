@@ -42,6 +42,7 @@
 //! ```
 
 pub use gme_common::format::Format;
+pub use gme_common::music_emu::Ym2612Backend;
 pub use gme_common::track_info::{Equalizer, TrackInfo};
 pub use gme_core::error::GmeError;
 
@@ -106,7 +107,12 @@ decoders! {
     "vgm" => gme_vgm::vgm_emu::VgmEmu, [Vgm, Vgz];
 }
 
-/// A pure Rust emulator producing interleaved stereo samples.
+struct CollectionTrack {
+    data: Vec<u8>,
+    info: TrackInfo,
+}
+
+/// A pure Rust emulator producing interleaved PCM samples.
 pub struct GameMusicEmu {
     format: Format,
     sample_rate: i32,
@@ -115,6 +121,9 @@ pub struct GameMusicEmu {
     current_track: Option<i32>,
     stereo_depth: f64,
     accuracy: bool,
+    backend: Ym2612Backend,
+    echo_disabled: bool,
+    collection: Vec<CollectionTrack>,
 }
 
 // SAFETY: decoder() only constructs the owned decoders listed above. Moving
@@ -127,6 +136,34 @@ impl GameMusicEmu {
         if sample_rate == 0 || sample_rate > i32::MAX as u32 / 2 {
             return Err(GmeError::Internal("Invalid sample rate"));
         }
+        Self::create(format, sample_rate)
+    }
+
+    /// Select a YM2612 synthesis core for GYM, VGM or VGZ before loading.
+    pub fn new_with_ym2612(
+        format: Format,
+        sample_rate: u32,
+        backend: Ym2612Backend,
+    ) -> Result<Self> {
+        let mut player = Self::new(format, sample_rate)?;
+        player.inner.select_ym2612(backend)?;
+        player.backend = backend;
+        Ok(player)
+    }
+
+    /// Read track metadata and playlists without setting up audio playback.
+    pub fn new_info_only(format: Format) -> Result<Self> {
+        Self::create(format, 0)
+    }
+
+    /// Render eight interleaved stereo pairs for the classic chip decoders.
+    pub fn new_multi_channel(format: Format, sample_rate: u32) -> Result<Self> {
+        let mut emu = Self::new(format, sample_rate)?;
+        emu.inner.enable_multi_channel()?;
+        Ok(emu)
+    }
+
+    fn create(format: Format, sample_rate: u32) -> Result<Self> {
         let mut inner = decoder(format)?;
         inner.playback_mut().equalizer = match format {
             Format::Nsf | Format::Nsfe => Equalizer::new(-1.0, 80.0),
@@ -142,6 +179,9 @@ impl GameMusicEmu {
             current_track: None,
             stereo_depth: 0.0,
             accuracy: false,
+            backend: Ym2612Backend::Nuked,
+            echo_disabled: false,
+            collection: Vec::new(),
         })
     }
 
@@ -167,8 +207,15 @@ impl GameMusicEmu {
 
     /// Replace the music in this emulator while retaining playback preferences.
     pub fn load_data(&mut self, data: impl AsRef<[u8]>) -> Result<()> {
+        self.inner = self.prepare_decoder(data.as_ref(), self.sample_rate)?;
+        self.current_track = None;
+        self.collection.clear();
+        self.loaded = true;
+        Ok(())
+    }
+
+    fn prepare_decoder(&self, data: &[u8], sample_rate: i32) -> Result<Box<dyn Decoder>> {
         use std::io::Read;
-        let data = data.as_ref();
         let mut plain = Vec::new();
         let data = if matches!(self.format, Format::Vgm | Format::Vgz)
             && data.starts_with(&[0x1f, 0x8b])
@@ -182,8 +229,17 @@ impl GameMusicEmu {
         };
 
         let mut next = decoder(self.format)?;
+        if self.multi_channel() {
+            next.enable_multi_channel()?;
+        }
+        if self.backend != Ym2612Backend::Nuked {
+            next.select_ym2612(self.backend)?;
+        }
         next.load_mem_impl(data)?;
-        next.set_sample_rate_impl(self.sample_rate)?;
+        if sample_rate == 0 {
+            return Ok(next);
+        }
+        next.set_sample_rate_impl(sample_rate)?;
         let state = self.inner.playback();
         next.playback_mut().equalizer = state.equalizer;
         next.set_equalizer_impl(&state.equalizer);
@@ -194,15 +250,73 @@ impl GameMusicEmu {
         next.enable_accuracy_impl(self.accuracy);
         next.playback_mut().mute_mask = state.mute_mask;
         next.mute_voices_impl(state.mute_mask);
-        self.inner = next;
-        self.current_track = None;
-        self.loaded = true;
-        Ok(())
+        next.playback_mut().autoload_playback_limit = state.autoload_playback_limit;
+        next.disable_echo_impl(self.echo_disabled);
+        Ok(next)
     }
 
     /// Load or replace music from disk using this emulator's format.
     pub fn load_file(&mut self, path: impl AsRef<Path>) -> Result<()> {
         self.load_data(std::fs::read(path).map_err(|_| GmeError::OpenFailed)?)
+    }
+
+    /// Load a custom reader, including readers that return short reads.
+    pub fn load_reader(&mut self, mut reader: impl std::io::Read) -> Result<()> {
+        let mut data = Vec::new();
+        reader
+            .read_to_end(&mut data)
+            .map_err(|_| GmeError::ReadError)?;
+        self.load_data(data)
+    }
+
+    /// Combine files of the same single-track format into an indexed collection.
+    /// Files are owned by the player. A failed replacement keeps the old music.
+    pub fn load_tracks(&mut self, files: &[impl AsRef<[u8]>]) -> Result<()> {
+        if self.format.info().track_count != 1 || files.is_empty() {
+            return Err(GmeError::Internal(
+                "Expected one or more single-track files",
+            ));
+        }
+        let count = i32::try_from(files.len()).map_err(|_| GmeError::OutOfMemory)?;
+        let mut tracks = Vec::with_capacity(files.len());
+        for file in files {
+            let data = file.as_ref();
+            let entry = self.prepare_decoder(data, 0)?;
+            let mut info = TrackInfo::default();
+            entry
+                .file()
+                .track_info_with_m3u(&mut info, 0, self.format, |out, index| {
+                    entry.track_info_impl(out, index)
+                })?;
+            tracks.push(CollectionTrack {
+                data: data.to_vec(),
+                info,
+            });
+        }
+        self.load_data(&tracks[0].data)?;
+        self.inner.file_mut().set_track_count(count);
+        self.collection = tracks;
+        Ok(())
+    }
+
+    /// Retrieve and clear the latest nonfatal decoder or playlist warning.
+    pub fn warning(&mut self) -> Option<String> {
+        let file = self.inner.file_mut();
+        let warning = file.warning()?;
+        Some(if warning == "Problem in m3u playlist" {
+            std::mem::take(&mut file.playlist_warning)
+        } else {
+            warning.to_owned()
+        })
+    }
+
+    pub fn multi_channel(&self) -> bool {
+        self.inner.playback().multi_channel
+    }
+
+    /// Interleaved samples per output frame (2 or 16).
+    pub fn out_channels(&self) -> usize {
+        self.inner.playback().out_channels() as usize
     }
 
     /// Start a zero-based track in the current playlist.
@@ -211,18 +325,35 @@ impl GameMusicEmu {
         self.inner
             .file()
             .remap_track(&mut mapped, self.format.info().flags)?;
-        self.inner.start_track_impl(mapped)?;
+        if self.sample_rate == 0 {
+            return Err(GmeError::Internal("Metadata-only player"));
+        }
+        if let Some(entry) = self.collection.get(mapped as usize) {
+            let mut next = self.prepare_decoder(&entry.data, self.sample_rate)?;
+            next.start_track_impl(0)?;
+            next.file_mut()
+                .set_track_count(self.collection.len() as i32);
+            next.file_mut().track_count = self.track_count();
+            std::mem::swap(
+                &mut self.inner.file_mut().playlist,
+                &mut next.file_mut().playlist,
+            );
+            self.inner = next;
+        } else {
+            self.inner.file_mut().warning();
+            self.inner.start_track_impl(mapped)?;
+        }
         self.current_track = Some(track);
         Ok(())
     }
 
-    /// Generate interleaved stereo i16 samples. The buffer length must be even.
+    /// Generate interleaved i16 samples. The buffer must contain whole output frames.
     pub fn play(&mut self, out: &mut [i16]) -> Result<()> {
         if self.current_track.is_none() {
             return Err(GmeError::Internal("No track started"));
         }
-        if !out.len().is_multiple_of(2) || out.len() > i32::MAX as usize {
-            return Err(GmeError::Internal("Invalid stereo buffer length"));
+        if !out.len().is_multiple_of(self.out_channels()) || out.len() > i32::MAX as usize {
+            return Err(GmeError::Internal("Invalid output buffer length"));
         }
         self.inner.play_impl(out.len() as i32, out)
     }
@@ -236,7 +367,12 @@ impl GameMusicEmu {
         self.inner
             .file()
             .track_info_with_m3u(&mut info, track, self.format, |out, mapped| {
-                self.inner.track_info_impl(out, mapped)
+                if let Some(entry) = self.collection.get(mapped as usize) {
+                    out.clone_from(&entry.info);
+                    Ok(())
+                } else {
+                    self.inner.track_info_impl(out, mapped)
+                }
             })?;
         info.track_count = i64::from(self.track_count());
         Ok(info)
@@ -254,7 +390,7 @@ impl GameMusicEmu {
         self.inner.file_mut().clear_playlist_state();
     }
     pub fn voice_count(&self) -> i32 {
-        if self.loaded {
+        if self.loaded && self.sample_rate != 0 {
             self.inner.voice_count()
         } else {
             0
@@ -270,7 +406,7 @@ impl GameMusicEmu {
             .map(|s| (*s).to_owned())
     }
     pub fn voice_names(&self) -> Vec<String> {
-        if !self.loaded {
+        if self.voice_count() == 0 {
             return Vec::new();
         }
         self.inner
@@ -289,7 +425,7 @@ impl GameMusicEmu {
     /// Set all mute bits at once. Zero restores all voices.
     pub fn mute_voices(&mut self, mask: i32) {
         self.inner.playback_mut().mute_mask = mask;
-        if self.loaded {
+        if self.loaded && self.sample_rate != 0 {
             self.inner.mute_voices_impl(mask);
         }
     }
@@ -301,7 +437,7 @@ impl GameMusicEmu {
             return Err(GmeError::Internal("Invalid equalizer"));
         }
         self.inner.playback_mut().equalizer = eq;
-        if self.loaded {
+        if self.loaded && self.sample_rate != 0 {
             self.inner.set_equalizer_impl(&eq);
         }
         Ok(())
@@ -310,7 +446,7 @@ impl GameMusicEmu {
     pub fn set_stereo_depth(&mut self, depth: f64) {
         if depth.is_finite() {
             self.stereo_depth = depth.clamp(0.0, 1.0);
-            if self.loaded {
+            if self.loaded && self.sample_rate != 0 {
                 self.inner.set_stereo_depth_impl(self.stereo_depth);
             }
         }
@@ -318,7 +454,7 @@ impl GameMusicEmu {
     /// Toggle hardware accuracy options supported by the format (SPC filtering).
     pub fn enable_accuracy(&mut self, enable: bool) {
         self.accuracy = enable;
-        if self.loaded {
+        if self.loaded && self.sample_rate != 0 {
             self.inner.enable_accuracy_impl(enable);
         }
     }
@@ -326,7 +462,7 @@ impl GameMusicEmu {
         if tempo.is_finite() {
             self.inner.playback_mut().set_tempo_range(tempo);
             let tempo = self.inner.playback().tempo;
-            if self.loaded {
+            if self.loaded && self.sample_rate != 0 {
                 self.inner.set_tempo_impl(tempo);
             }
         }
@@ -335,16 +471,67 @@ impl GameMusicEmu {
     pub fn set_fade(&mut self, start_ms: i32, length_ms: i32) {
         self.inner.playback_mut().set_fade(start_ms, length_ms);
     }
+    /// Disable the SPC echo unit. The setting survives restart and reload.
+    pub fn disable_echo(&mut self, disable: bool) {
+        self.echo_disabled = disable;
+        if self.loaded && self.sample_rate != 0 {
+            self.inner.disable_echo_impl(disable);
+        }
+    }
+
+    /// Apply embedded track duration when starting a track (currently SPC).
+    pub fn set_autoload_playback_limit(&mut self, enabled: bool) {
+        self.inner.playback_mut().autoload_playback_limit = enabled;
+    }
+    pub fn autoload_playback_limit(&self) -> bool {
+        self.inner.playback().autoload_playback_limit
+    }
+
     pub fn seek(&mut self, msec: i32) -> Result<()> {
+        self.seek_samples(self.inner.playback().msec_to_samples(msec))
+    }
+
+    /// Absolute position in interleaved samples. The position must be a frame boundary.
+    pub fn seek_samples(&mut self, time: i32) -> Result<()> {
+        if time < 0 || time % self.inner.playback().out_channels() != 0 {
+            return Err(GmeError::Internal("Seek position must be a complete frame"));
+        }
         let track = self
             .current_track
             .ok_or(GmeError::Internal("No track started"))?;
-        let time = self.inner.playback().msec_to_samples(msec.max(0));
         if time < self.inner.playback().out_time {
             self.start_track(track)?;
         }
         let count = time - self.inner.playback().out_time;
         self.inner.skip_impl(count)
+    }
+    pub fn tell_samples(&self) -> i32 {
+        self.inner.playback().tell_samples()
+    }
+
+    /// Elapsed musical time, accounting for tempo changes since track start.
+    pub fn tell_scaled(&self) -> i64 {
+        self.inner.playback().tell_scaled()
+    }
+
+    pub fn seek_scaled(&mut self, msec: i32) -> Result<()> {
+        let track = self
+            .current_track
+            .ok_or(GmeError::Internal("No track started"))?;
+        let target = i64::from(msec.max(0)) * i64::from(self.sample_rate) / 1000;
+        if target < i64::from(self.inner.playback().out_time_scaled) {
+            self.start_track(track)?;
+        }
+        let state = self.inner.playback();
+        let channels = state.out_channels();
+        let frames = target - i64::from(state.out_time_scaled);
+        let samples = (frames as f64 * f64::from(channels) / state.tempo) as i64;
+        let aligned = samples.saturating_add(i64::from(channels) - 1) / i64::from(channels)
+            * i64::from(channels);
+        let position = i64::from(state.out_time).saturating_add(aligned);
+        self.seek_samples(
+            i32::try_from(position).map_err(|_| GmeError::Internal("Seek out of range"))?,
+        )
     }
     pub fn tell(&self) -> i32 {
         self.inner.playback().tell()

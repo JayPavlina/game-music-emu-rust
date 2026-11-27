@@ -296,10 +296,12 @@ impl MusicEmulator for SapEmu {
             let end = get_le16(&data[pos + 2..]) as usize;
             pos += 4;
             if end < start {
+                self.state.set_warning("Invalid file data block");
                 break;
             }
             let len = end - start + 1;
             if len > data.len().saturating_sub(pos) {
+                self.state.set_warning("Invalid file data block");
                 break;
             }
             if end < self.ram.len() {
@@ -371,11 +373,13 @@ impl MusicEmulator for SapEmu {
     fn play_impl(&mut self, count: i32, out: &mut [i16]) -> GmeResult {
         if !self.buf_initialized {
             out[..count as usize].fill(0);
+            self.emu_state.advance_output(count);
             return Ok(());
         }
 
         if self.emu_state.track_ended {
             out[..count as usize].fill(0);
+            self.emu_state.advance_output(count);
             return Ok(());
         }
 
@@ -470,16 +474,13 @@ impl MusicEmulator for SapEmu {
             self.emu_state.emu_track_ended = true;
         }
 
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled +=
-            (count as f64 * self.emu_state.tempo / out_channels as f64) as i32;
+        self.emu_state.advance_output(count);
         Ok(())
     }
 
     /// Transliteration of C++ Music_Emu::skip / Music_Emu::skip_.
     fn skip_impl(&mut self, count: i32) -> GmeResult {
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
 
         let mut count = count;
 
@@ -535,6 +536,15 @@ impl MusicEmulator for SapEmu {
         let eq = BlipEq::new(settings.treble);
         self.apu_impl.synth.treble_eq(&eq);
         self.stereo_buf.bass_freq(settings.bass as i32);
+    }
+
+    fn enable_multi_channel(&mut self) -> GmeResult {
+        if self.emu_state.sample_rate != 0 {
+            return Err("Output already initialized".into());
+        }
+        self.stereo_buf = EffectsBuffer::new(8, false);
+        self.emu_state.multi_channel = true;
+        Ok(())
     }
 
     fn set_stereo_depth_impl(&mut self, depth: f64) {

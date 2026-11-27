@@ -5,6 +5,10 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[features]
+ym2612_emu_mame = ["gme-vgm/ym2612_emu_mame"]
+ym2612_emu_gens = ["gme-vgm/ym2612_emu_gens"]
+
 [dependencies]
 gme-core.workspace = true
 gme-common.workspace = true

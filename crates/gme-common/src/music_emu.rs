@@ -15,7 +15,23 @@ const FADE_SHIFT: i32 = 8;
 const BUF_SIZE: usize = 2048;
 
 /// Trait that format-specific emulators implement.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Ym2612Backend {
+    #[default]
+    Nuked,
+    Gens,
+    Mame,
+}
+
 pub trait MusicEmulator {
+    /// Choose an FM implementation before configuring audio.
+    fn select_ym2612(&mut self, backend: Ym2612Backend) -> GmeResult {
+        match backend {
+            Ym2612Backend::Nuked => Ok(()),
+            _ => Err("This format does not use a YM2612".into()),
+        }
+    }
+
     /// Get the format type.
     fn format(&self) -> Format;
 
@@ -31,6 +47,11 @@ pub trait MusicEmulator {
     /// Skip samples (for seeking). Each emulator transliterates C++
     /// Music_Emu::skip, including the out_time bookkeeping.
     fn skip_impl(&mut self, count: i32) -> GmeResult;
+
+    /// Select discrete voice routing before initialization.
+    fn enable_multi_channel(&mut self) -> GmeResult {
+        Ok(())
+    }
 
     /// Set equalizer.
     fn set_equalizer_impl(&mut self, _eq: &Equalizer) {}
@@ -152,12 +173,17 @@ impl MusicEmuState {
     }
 
     pub fn tell(&self) -> i32 {
-        let rate = self.sample_rate * self.out_channels();
+        let rate = i64::from(self.sample_rate) * i64::from(self.out_channels());
         if rate == 0 {
             return 0;
         }
-        let sec = self.out_time / rate;
-        sec * 1000 + (self.out_time - sec * rate) * 1000 / rate
+        (i64::from(self.out_time) * 1000 / rate).min(i64::from(i32::MAX)) as i32
+    }
+
+    pub fn advance_output(&mut self, samples: i32) {
+        self.out_time = self.out_time.saturating_add(samples);
+        let frames = f64::from(samples) * self.tempo / f64::from(self.out_channels());
+        self.out_time_scaled = self.out_time_scaled.saturating_add(frames as i32);
     }
 
     pub fn tell_samples(&self) -> i32 {

@@ -600,7 +600,7 @@ impl MultiBuffer for EffectsBuffer {
     }
 
     fn samples_avail(&self) -> i64 {
-        self.bufs[0].samples_avail() * 2
+        self.bufs[0].samples_avail() * i64::from(self.samples_per_frame())
     }
 
     fn read_samples(&mut self, out: &mut [i16], total_samples: i64) -> i64 {

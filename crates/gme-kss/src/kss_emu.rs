@@ -266,9 +266,18 @@ impl GmeFile for KssEmu {
         // Set track count (KSS supports up to 256 tracks)
         self.state.set_track_count(256);
 
-        // Warn about unsupported features
+        let base = &mut self.header.base;
+        if base.tag[3] == b'C' {
+            if base.extra_header != 0 || base.device_flags & !0x0f != 0 {
+                base.extra_header = 0;
+                base.device_flags &= 0x0f;
+                self.state.set_warning("Unknown data in header");
+            }
+        } else if base.extra_header > 0x10 {
+            self.state.set_warning("Unknown data in header");
+        }
         if self.header.base.uses_fm() {
-            // FM sound not supported - warning
+            self.state.set_warning("FM sound not supported");
         }
 
         // Determine SCC enable state
@@ -345,6 +354,9 @@ impl MusicEmulator for KssEmu {
             .min(self.rom_data.len())
             .min(MEM_SIZE - load_addr);
 
+        if load_size != orig_load_size {
+            self.state.set_warning("Excessive data size");
+        }
         if load_size > 0 && load_addr + load_size <= MEM_SIZE {
             self.ram[load_addr..load_addr + load_size].copy_from_slice(&self.rom_data[..load_size]);
         }
@@ -362,7 +374,7 @@ impl MusicEmulator for KssEmu {
         let mut bank_count = (self.header.base.bank_mode & 0x7F) as i32;
         if bank_count > max_banks as i32 {
             bank_count = max_banks as i32;
-            // Warning: bank data missing
+            self.state.set_warning("Bank data missing");
         }
         self.bank_count = bank_count;
 
@@ -418,7 +430,7 @@ impl MusicEmulator for KssEmu {
         self.emu_state.track_ended = false;
         if self.buf_initialized && !self.emu_state.ignore_silence_flag {
             let end = i64::from(self.emu_state.max_initial_silence)
-                * 2
+                * i64::from(self.emu_state.out_channels())
                 * i64::from(self.emu_state.sample_rate);
             while i64::from(self.emu_state.emu_time) < end && self.emu_state.buf_remain == 0 {
                 self.fill_silence_buffer();
@@ -434,7 +446,7 @@ impl MusicEmulator for KssEmu {
         let out = &mut out[..count as usize];
         if !self.buf_initialized || self.emu_state.track_ended {
             out.fill(0);
-            self.emu_state.out_time += count;
+            self.emu_state.advance_output(count);
             return Ok(());
         }
         let mut pos = 0;
@@ -454,7 +466,8 @@ impl MusicEmulator for KssEmu {
             self.emu_state.silence_count -= pos as i64;
             if !self.emu_state.ignore_silence_flag
                 && i64::from(self.emu_state.emu_time) - self.emu_state.silence_time
-                    > 6 * 2 * i64::from(self.emu_state.sample_rate)
+                    > 6 * i64::from(self.emu_state.out_channels())
+                        * i64::from(self.emu_state.sample_rate)
             {
                 self.emu_state.emu_track_ended = true;
                 self.emu_state.track_ended = true;
@@ -501,12 +514,12 @@ impl MusicEmulator for KssEmu {
             self.emu_state.emu_track_ended = true;
         }
 
-        self.emu_state.out_time += count;
+        self.emu_state.advance_output(count);
         Ok(())
     }
 
     fn skip_impl(&mut self, count: i32) -> GmeResult {
-        self.emu_state.out_time += count;
+        self.emu_state.advance_output(count);
 
         if !self.buf_initialized || self.emu_state.track_ended {
             return Ok(());
@@ -564,6 +577,15 @@ impl MusicEmulator for KssEmu {
             sn.treble_eq(&eq);
         }
         self.stereo_buf.bass_freq(settings.bass as i32);
+    }
+
+    fn enable_multi_channel(&mut self) -> GmeResult {
+        if self.emu_state.sample_rate != 0 {
+            return Err("Output already initialized".into());
+        }
+        self.stereo_buf = EffectsBuffer::new(8, false);
+        self.emu_state.multi_channel = true;
+        Ok(())
     }
 
     fn set_stereo_depth_impl(&mut self, depth: f64) {

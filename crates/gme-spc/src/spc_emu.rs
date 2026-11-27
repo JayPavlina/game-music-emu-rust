@@ -231,8 +231,7 @@ impl MusicEmulator for SpcEmu {
         // C++ Music_Emu::play: a finished track outputs zeros
         if self.emu_state.track_ended {
             out[..out_count].fill(0);
-            self.emu_state.out_time += count;
-            self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+            self.emu_state.advance_output(count);
             return Ok(());
         }
 
@@ -314,15 +313,13 @@ impl MusicEmulator for SpcEmu {
             self.emu_state.emu_track_ended = true;
         }
 
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
         Ok(())
     }
 
     /// Transliteration of C++ Music_Emu::skip / Spc_Emu::skip_.
     fn skip_impl(&mut self, count: i32) -> GmeResult {
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
 
         let mut count = count;
 

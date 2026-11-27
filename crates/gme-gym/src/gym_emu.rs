@@ -22,7 +22,7 @@ use gme_core::blip_buffer::{
 use gme_core::error::{GmeError, GmeResult};
 use gme_vgm::dual_resampler::DualResampler;
 use gme_vgm::sms_apu::SmsApu;
-use gme_vgm::ym2612_nuked::Ym2612NukedEmu;
+use gme_vgm::ym2612::Ym2612;
 
 use crate::header::{self, GymHeader};
 
@@ -66,7 +66,7 @@ pub struct GymEmu {
 
     // sound
     blip_buf: BlipBuffer,
-    fm: Ym2612NukedEmu,
+    fm: Ym2612,
     dac_synth: BlipSynth,
     apu: SmsApu,
     dual: DualResampler,
@@ -105,7 +105,7 @@ impl GymEmu {
             dac_muted: false,
             dac_buf: [0; 1024],
             blip_buf: BlipBuffer::new(),
-            fm: Ym2612NukedEmu::new(),
+            fm: Ym2612::default(),
             dac_synth: BlipSynth::new(BLIP_MED_QUALITY),
             apu: SmsApu::new(),
             dual: DualResampler::new(),
@@ -455,6 +455,10 @@ impl MusicEmulator for GymEmu {
     }
 
     /// C++ `Gym_Emu::set_sample_rate_`
+    fn select_ym2612(&mut self, backend: gme_common::music_emu::Ym2612Backend) -> GmeResult {
+        self.fm = Ym2612::select(backend)?;
+        Ok(())
+    }
     fn set_sample_rate_impl(&mut self, sample_rate: i32) -> GmeResult {
         let gain = self.emu_state.gain;
         let eq = BlipEq::with_params(-32.0, 8000, sample_rate as i64, 0);
@@ -472,7 +476,7 @@ impl MusicEmulator for GymEmu {
         self.blip_buf.clock_rate(CLOCK_RATE as u32);
 
         self.fm
-            .set_rate(self.fm_sample_rate, BASE_CLOCK as f64 / 7.0);
+            .set_rate(self.fm_sample_rate, BASE_CLOCK as f64 / 7.0)?;
         self.dual
             .reset((1.0 / 60.0 / MIN_TEMPO * sample_rate as f64) as usize);
         self.fm_buf = vec![0; self.dual.resampler_size];
@@ -614,8 +618,7 @@ impl MusicEmulator for GymEmu {
                 self.emu_state.emu_track_ended = true;
             }
         }
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
         Ok(())
     }
 
@@ -623,8 +626,7 @@ impl MusicEmulator for GymEmu {
     /// emu_play advances emu_time internally, so unlike the C++ original this
     /// must not add count to emu_time itself.
     fn skip_impl(&mut self, count: i32) -> GmeResult {
-        self.emu_state.out_time += count;
-        self.emu_state.out_time_scaled += (count as f64 * self.emu_state.tempo / 2.0) as i32;
+        self.emu_state.advance_output(count);
 
         let mut count = count;
 

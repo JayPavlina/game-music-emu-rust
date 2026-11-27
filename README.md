@@ -64,7 +64,17 @@ Use `GameMusicEmu::from_file` or `from_data` for format detection. For an explic
 | Inspect and mute voices | `voice_count`, `voice_name`, `mute_voice`, `mute_voices` |
 | Adjust tempo and sound | `set_tempo`, `equalizer`, `set_equalizer`, `set_stereo_depth`, `enable_accuracy` |
 
-EQ and stereo enhancement apply to AY, GBS, HES, KSS, NSF/NSFE, SAP, and VGM/VGZ. Accuracy toggles the SPC output filter. NSFE shares the NSF decoder (`nsfe` is a Cargo alias for `nsf`), and VGZ shares the VGM decoder. VGM and VGZ support YM2413 melody and rhythm, dual YM2413 chips, and YM2612 synthesis with the Nuked core. For YM2413, the first five mute controls select individual melodic channels, the sixth groups channels 6–9, and the seventh controls percussion. The legacy wrapper retains the GENS and MAME alternatives for YM2612. KSS FM synthesis remains unsupported.
+EQ and stereo enhancement apply to AY, GBS, HES, KSS, NSF/NSFE, SAP, and VGM/VGZ. Accuracy toggles the SPC output filter. NSFE shares the NSF decoder (`nsfe` is a Cargo alias for `nsf`), and VGZ shares the VGM decoder. VGM and VGZ support YM2413 melody and rhythm, dual YM2413 chips, and YM2612 synthesis with Nuked (default), GENS, or MAME. For YM2413, the first five mute controls select individual melodic channels, the sixth groups channels 6–9, and the seventh controls percussion. KSS FM synthesis remains unsupported.
+
+### Advanced playback
+
+| Task | Rust API |
+| --- | --- |
+| Render individual voices | Construct with `new_multi_channel(format, rate)` and query `out_channels()`. AY, GBS, HES, KSS, NSF/NSFE and SAP produce 16 interleaved samples per frame, one left/right pair per voice slot. GYM, SPC and VGM/VGZ produce stereo. Voices beyond eight share slots. |
+| Position playback | `tell_samples` and `seek_samples` count interleaved samples aligned to a complete frame. `tell_scaled` and `seek_scaled` use musical milliseconds, accounting for playback tempo. |
+| Control SPC playback | `disable_echo(bool)` switches DSP echo. `set_autoload_playback_limit(bool)` controls whether starting a track applies its tagged duration and fade. |
+| Read metadata or a collection | `new_info_only(format)` loads tags without starting audio. `load_reader` accepts any `std::io::Read`. `load_tracks` combines same-format GYM, SPC, or VGM/VGZ files as tracks. `warning()` takes the latest nonfatal warning. |
+| Select a Genesis FM core | Enable `ym2612_emu_gens` or `ym2612_emu_mame` alongside GYM or VGM, then call `GameMusicEmu::new_with_ym2612(format, rate, Ym2612Backend::Gens)` or select `Mame`. Both features can coexist. Linking MAME brings GPL-2.0-or-later terms. |
 
 Applications that need the original binding signatures can alias the wrapper in Cargo. Adjust the path to your checkout.
 

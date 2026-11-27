@@ -6,6 +6,7 @@ members = [
     "crates/gme-spc",
     "crates/gme-gbs",
     "crates/gme-vgm",
+    "crates/gme-ym2612-mame",
     "crates/gme-sap",
     "crates/gme-kss",
     "crates/gme-ay",

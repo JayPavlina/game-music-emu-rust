@@ -1,4 +1,18 @@
 fn main() {
+    if cfg!(feature = "ym2612-reference-tests") {
+        for (flag, name) in [
+            ("REFERENCE_GENS", "gens_reference"),
+            ("REFERENCE_MAME", "mame_reference"),
+        ] {
+            cc::Build::new()
+                .cpp(true)
+                .warnings(false)
+                .define(flag, None)
+                .file("src/ym2612_reference.cpp")
+                .compile(name);
+        }
+        println!("cargo:rerun-if-changed=src/ym2612_reference.cpp");
+    }
     let mut defines = Vec::new();
 
     let ay = cfg!(feature = "ay");
