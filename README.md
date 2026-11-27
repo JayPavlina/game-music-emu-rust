@@ -48,7 +48,7 @@ let mut samples = vec![0i16; 44100 * 2]; // 1 second, stereo
 emu.play(&mut samples).unwrap();
 ```
 
-See the [play_nsf example](crates/game-music-emu/examples/play_nsf.rs) for a complete audio playback demo using [cpal](https://crates.io/crates/cpal).
+See the [play_nsf example](https://github.com/JayPavlina/game-music-emu-rust/blob/master/crates/game-music-emu/examples/play_nsf.rs) for a complete audio playback demo using [cpal](https://crates.io/crates/cpal).
 
 ## Playback controls and migration from 0.3
 
@@ -76,10 +76,10 @@ EQ and stereo enhancement apply to AY, GBS, HES, KSS, NSF/NSFE, SAP, and VGM/VGZ
 | Read metadata or a collection | `new_info_only(format)` loads tags without starting audio. `load_reader` accepts any `std::io::Read`. `load_tracks` combines same-format GYM, SPC, or VGM/VGZ files as tracks. `warning()` takes the latest nonfatal warning. |
 | Select a Genesis FM core | Enable `ym2612_emu_gens` or `ym2612_emu_mame` alongside GYM or VGM, then call `GameMusicEmu::new_with_ym2612(format, rate, Ym2612Backend::Gens)` or select `Mame`. Both features can coexist. Linking MAME brings GPL-2.0-or-later terms. |
 
-Applications that need the original binding signatures can alias the wrapper in Cargo. Adjust the path to your checkout.
+Applications that use the original binding signatures can keep their existing imports by aliasing the wrapper in Cargo.
 
 ```toml
-game-music-emu = { package = "game-music-emu-wrapper", path = "crates/game-music-emu-wrapper" }
+game-music-emu = { package = "game-music-emu-wrapper", version = "0.3" }
 ```
 
 ## C++ Wrapper
@@ -95,6 +95,6 @@ The C++ wrapper requires a C/C++ toolchain to build.
 
 ## License
 
-The Rust facade and original project code use MIT. The shared audio engine and all nine Rust decoders contain Game_Music_Emu ports under LGPL-2.1-or-later. The Nuked YM2612 core uses LGPL-2.1-or-later, and the emu2413 core uses MIT. Commercial games can use the Rust library. If you distribute a statically linked game, review the relinking requirements. [Source notices and distribution guide](crates/game-music-emu/LICENSING.md)
+The Rust facade and original project code use MIT. The shared audio engine and all nine Rust decoders contain Game_Music_Emu ports under LGPL-2.1-or-later. The Nuked YM2612 core uses LGPL-2.1-or-later, and the emu2413 core uses MIT. Commercial games can use the Rust library. If you distribute a statically linked game, review the relinking requirements. [Source notices and distribution guide](https://github.com/JayPavlina/game-music-emu-rust/blob/master/crates/game-music-emu/LICENSING.md)
 
-The C++ wrapper uses the LGPL-covered Nuked backend by default. Its optional MAME backend makes the resulting library GPL-2.0-or-later. [Wrapper backend licenses](crates/game-music-emu-wrapper/NOTICES.md) · [Test fixture permissions](assets/LICENSE-SOURCES.md)
+The C++ wrapper uses the LGPL-covered Nuked backend by default. Its optional MAME backend makes the resulting library GPL-2.0-or-later. [Wrapper backend licenses](https://github.com/JayPavlina/game-music-emu-rust/blob/master/crates/game-music-emu-wrapper/NOTICES.md) · [Test fixture permissions](https://github.com/JayPavlina/game-music-emu-rust/blob/master/assets/LICENSE-SOURCES.md)
