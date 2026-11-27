@@ -41,7 +41,7 @@ gme-kss = { path = "crates/gme-kss", version = "0.1.0" }
 gme-ay = { path = "crates/gme-ay", version = "0.1.0" }
 gme-gym = { path = "crates/gme-gym", version = "0.1.0" }
 gme-hes = { path = "crates/gme-hes", version = "0.1.0" }
-game-music-emu-wrapper = { path = "crates/game-music-emu-wrapper", version = "0.3.0" }
+game-music-emu-wrapper = { path = "crates/game-music-emu-wrapper" }
 
 # External crates
 cpal = "0.18"
