@@ -7,6 +7,7 @@ description = "Pure Rust game music emulator — plays NSF, SPC, VGM and other r
 keywords = ["NSF", "game", "music", "emulation", "audio"]
 categories = ["multimedia::audio"]
 repository.workspace = true
+readme = "../../README.md"
 
 [features]
 ym2612_emu_mame = ["gme-vgm?/ym2612_emu_mame", "gme-gym?/ym2612_emu_mame"]

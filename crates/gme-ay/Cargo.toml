@@ -4,6 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "ZX Spectrum AY music emulator for game-music-emu"
 
 [dependencies]
 gme-core.workspace = true
