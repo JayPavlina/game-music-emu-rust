@@ -1,0 +1,55 @@
+[package]
+name = "game-music-emu"
+version = "0.5.0"
+edition.workspace = true
+license = "MIT"
+description = "Pure Rust game music emulator — plays NSF, SPC, VGM and other retro game music formats"
+keywords = ["NSF", "game", "music", "emulation", "audio"]
+categories = ["multimedia::audio"]
+repository.workspace = true
+
+[features]
+ym2612_emu_mame = ["gme-vgm?/ym2612_emu_mame", "gme-gym?/ym2612_emu_mame"]
+ym2612_emu_gens = ["gme-vgm?/ym2612_emu_gens", "gme-gym?/ym2612_emu_gens"]
+default = ["nsf", "spc", "gbs", "vgm", "sap", "kss", "ay", "gym", "hes"]
+nsf = ["dep:gme-nsf"]
+nsfe = ["nsf"]
+spc = ["dep:gme-spc"]
+gbs = ["dep:gme-gbs"]
+vgm = ["dep:gme-vgm"]
+sap = ["dep:gme-sap"]
+kss = ["dep:gme-kss"]
+ay = ["dep:gme-ay"]
+gym = ["dep:gme-gym"]
+hes = ["dep:gme-hes"]
+
+[dependencies]
+gme-core.workspace = true
+gme-common.workspace = true
+gme-nsf = { workspace = true, optional = true }
+gme-spc = { workspace = true, optional = true }
+gme-gbs = { workspace = true, optional = true }
+gme-vgm = { workspace = true, optional = true }
+gme-sap = { workspace = true, optional = true }
+gme-kss = { workspace = true, optional = true }
+gme-ay = { workspace = true, optional = true }
+gme-gym = { workspace = true, optional = true }
+gme-hes = { workspace = true, optional = true }
+flate2.workspace = true
+
+[dev-dependencies]
+cpal.workspace = true
+criterion.workspace = true
+game-music-emu-wrapper.workspace = true
+
+[[example]]
+name = "play_nsf"
+path = "examples/play_nsf.rs"
+
+[[bench]]
+name = "render"
+harness = false
+
+[[bench]]
+name = "compare_cpp"
+harness = false

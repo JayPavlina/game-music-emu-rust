@@ -1,0 +1,41 @@
+[package]
+name = "game-music-emu-wrapper"
+version = "0.3.0"
+authors = ["Jay Pavlina <jaypavlina@gmail.com>"]
+edition.workspace = true
+build = "build.rs"
+license = "MIT AND LGPL-2.1-or-later AND GPL-2.0-or-later"
+description = "Rust bindings for Game Music Emu"
+keywords = ["NSF", "game", "music", "emulation", "audio"]
+categories = ["api-bindings", "multimedia::audio"]
+repository.workspace = true
+
+[features]
+ym2612-reference-tests = []
+default = ["ay", "gbs", "gym", "hes", "kss", "nsf", "nsfe", "sap", "spc", "vgm", "ym2612_emu_nuked"]
+ay = []
+gbs = []
+gym = []
+hes = []
+kss = []
+nsf = []
+nsfe = []
+sap = []
+spc = []
+vgm = []
+# choose one ym2612_emu or none. If none chosen, Ym2612_GENS.cpp is used
+ym2612_emu_nuked = []
+ym2612_emu_mame = []
+
+[dependencies]
+thiserror.workspace = true
+
+[build-dependencies]
+cc.workspace = true
+
+[dev-dependencies]
+cpal.workspace = true
+
+[[example]]
+name = "play_nsf"
+path = "examples/play_nsf.rs"

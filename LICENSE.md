@@ -1,6 +1,14 @@
-MIT License
+# Game Music Emu licensing
 
-Copyright (c) [2019] [Jay Pavlina]
+The MIT terms below apply to the original Rust project code. The shared engine and all nine Rust decoders include Game_Music_Emu adaptations under LGPL-2.1-or-later. Both Rust and C++ offer an optional GPL-2.0-or-later MAME backend. Individual source notices and package manifests identify the applicable licenses.
+
+- [Rust component licenses and guidance for distributing games](crates/game-music-emu/LICENSING.md)
+- [C++ wrapper component licenses](crates/game-music-emu-wrapper/NOTICES.md)
+- [Test music sources and permissions](assets/LICENSE-SOURCES.md)
+
+## MIT License
+
+Copyright (c) 2026 Jay Pavlina
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
