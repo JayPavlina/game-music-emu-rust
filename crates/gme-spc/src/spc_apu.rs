@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2004-2007 Shay Green
+// Rust adaptation of Snes_Spc.cpp, Spc_Cpu.cpp and Spc_Cpu.h (2026-06-09 to 2026-06-14), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 use crate::spc_dsp::{self, SpcDsp};
 
 pub const ROM_SIZE: usize = 0x40;

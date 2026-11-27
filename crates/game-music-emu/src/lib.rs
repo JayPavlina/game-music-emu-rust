@@ -3,6 +3,9 @@
 //! A pure Rust implementation of [Game Music Emu](https://bitbucket.org/mpyne/game-music-emu/),
 //! a library for playing music from retro video game consoles.
 //!
+//! The facade source uses MIT. Playback links LGPL-2.1-or-later components.
+//! See `LICENSING.md` in this crate for notices and distribution guidance.
+//!
 //! ## Supported Formats
 //!
 //! | Format | System | Feature Flag |

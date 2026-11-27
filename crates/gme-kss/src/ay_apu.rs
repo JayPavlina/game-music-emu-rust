@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2006 Shay Green
+// Rust adaptation of Ay_Apu.cpp (2026-06-09 to 2026-06-11), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 /// AY-3-8910 sound chip emulator.
 /// Port of C++ Ay_Apu.h / Ay_Apu.cpp.
 use gme_core::blip_buffer::{BLIP_GOOD_QUALITY, BlipBuffer, BlipEq, BlipSynth, BlipTime};

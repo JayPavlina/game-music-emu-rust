@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2005-2006 Shay Green
+// Rust adaptation of Nsfe_Emu.cpp (2026-06-09), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 use gme_core::endian::get_le32;
 use gme_core::error::{GmeError, GmeResult};
 

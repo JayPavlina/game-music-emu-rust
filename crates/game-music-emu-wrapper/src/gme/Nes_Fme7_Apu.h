@@ -1,3 +1,4 @@
+// Modified for the Rust workspace and its reference tests, 2026.
 // Sunsoft FME-7 sound emulator
 
 // Game_Music_Emu https://bitbucket.org/mpyne/game-music-emu/

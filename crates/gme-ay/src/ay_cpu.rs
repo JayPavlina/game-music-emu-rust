@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2006 Shay Green
+// Rust adaptation of Ay_Cpu.cpp (2026-06-11), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 //! Z80 CPU emulator for the AY format.
 //! Port of C++ Ay_Cpu.h / Ay_Cpu.cpp (NOT the same core as Kss_Cpu: this one
 //! uses a flat 64K memory pointer and no read/write hooks; only IN/OUT are

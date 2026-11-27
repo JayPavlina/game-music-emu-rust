@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) 2001-2019, 2020 Mitsutaka Okazaki
+// Rust adaptation of ext/emu2413.c (2026-06-11), updated in this workspace in 2026.
 //! YM2413/VRC7 (OPLL) FM sound chip core.
 //!
 //! 1:1 transliteration of the vendored `ext/emu2413.c` v1.5.9

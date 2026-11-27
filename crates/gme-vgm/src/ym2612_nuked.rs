@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2017 Alexey Khokholov (Nuke.YKT)
+// Rust adaptation of Ym2612_Nuked.cpp (2026-06-11), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 //! YM2612 (Nuked OPN2) emulator.
 //!
 //! 1:1 transliteration of `Ym2612_Nuked.cpp` (Nuked OPN2 / ym3438 core

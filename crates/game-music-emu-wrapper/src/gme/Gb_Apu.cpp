@@ -1,3 +1,4 @@
+// Modified for the Rust workspace and its reference tests, 2026.
 // Gb_Snd_Emu 0.1.5. http://www.slack.net/~ant/
 
 #include "Gb_Apu.h"

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2006 Shay Green
+// Rust adaptation of Ay_Emu.cpp (2026-06-11 to 2026-06-14), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 //! AY format (ZX Spectrum / Amstrad CPC) music emulator.
 //! Port of C++ Ay_Emu.h / Ay_Emu.cpp, using the same Music_Emu/Classic_Emu
 //! playback machinery as gme-nsf (proven bit-exact).

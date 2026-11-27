@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2003-2006 Shay Green
+// Rust adaptation of Gme_File.cpp (2026-06-09 to 2026-06-10), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 use gme_core::data_reader::{DataReader, RemainingReader, StdFileReader};
 use gme_core::error::{GmeError, GmeResult};
 use gme_core::m3u_playlist::M3uPlaylist;

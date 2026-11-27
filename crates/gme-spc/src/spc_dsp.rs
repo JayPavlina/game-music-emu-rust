@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2007 Shay Green
+// Rust adaptation of Spc_Dsp.cpp (2026-06-09 to 2026-06-14), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 //! Fast SNES SPC-700 DSP emulator (SPC_LESS_ACCURATE).
 //!
 //! 1:1 transliteration of game-music-emu's Spc_Dsp.cpp / Spc_Dsp.h

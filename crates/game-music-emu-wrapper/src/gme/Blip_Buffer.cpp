@@ -1,3 +1,4 @@
+// Modified for the Rust workspace and its reference tests, 2026.
 // Blip_Buffer 0.4.1. http://www.slack.net/~ant/
 
 #include "Blip_Buffer.h"

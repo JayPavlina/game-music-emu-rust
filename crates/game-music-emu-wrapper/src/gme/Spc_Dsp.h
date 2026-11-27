@@ -1,3 +1,4 @@
+// Modified for the Rust workspace and its reference tests, 2026.
 // Fast SNES SPC-700 DSP emulator (about 3x speed of accurate one)
 
 // Game_Music_Emu https://bitbucket.org/mpyne/game-music-emu/

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2003-2006 Shay Green
+// Rust adaptation of Gym_Emu.cpp (2026-06-11), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 //! GYM file header parsing and track info, ported 1:1 from `Gym_Emu.cpp`
 //! (header layout, `check_header`, `gym_track_length`, `get_gym_info`).
 

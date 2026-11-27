@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2006 Shay Green
+// Rust adaptation of Kss_Scc_Apu.cpp (2026-06-09), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 /// Konami SCC sound chip emulator.
 /// Port of C++ Kss_Scc_Apu.h / Kss_Scc_Apu.cpp.
 use gme_core::blip_buffer::{BLIP_MED_QUALITY, BlipBuffer, BlipSynth, BlipTime};

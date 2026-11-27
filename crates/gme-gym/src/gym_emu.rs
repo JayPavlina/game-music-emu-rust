@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2003-2006 Shay Green
+// Rust adaptation of Gym_Emu.cpp (2026-06-11 to 2026-06-14), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 //! Sega Genesis GYM music file emulator: 1:1 port of `Gym_Emu.cpp`.
 //!
 //! GYM is a CPU-less command log driving a YM2612 (Nuked core) + SMS PSG +

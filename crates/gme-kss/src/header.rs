@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2006 Shay Green
+// Rust adaptation of Kss_Emu.cpp (2026-06-09), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 //! KSS file header parsing.
 //! Matches C++ Kss_Emu::header_t and Kss_Emu::ext_header_t.
 

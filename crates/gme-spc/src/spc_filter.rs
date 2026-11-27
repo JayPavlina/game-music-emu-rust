@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2007 Shay Green
+// Rust adaptation of Spc_Filter.cpp (2026-06-09), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 pub const GAIN_UNIT: i32 = 0x100;
 pub const BASS_NONE: i32 = 0;
 pub const BASS_NORM: i32 = 8;

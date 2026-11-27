@@ -1,3 +1,4 @@
+// Modified for the Rust workspace and its reference tests, 2026.
 // Band-limited sound synthesis buffer
 
 // Blip_Buffer 0.4.1

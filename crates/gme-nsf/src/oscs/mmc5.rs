@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+// Copyright (C) 2003-2009 Shay Green (Game_Music_Emu)
+// Rust adaptation of Nes_Mmc5_Apu.h (2026-06-11), license notice updated 2026-11-27.
+// Distributed without warranty. See COPYING.LESSER in this crate.
 use gme_core::blip_buffer::{BlipBuffer, BlipEq, BlipTime};
 
 use crate::apu::NesApu;

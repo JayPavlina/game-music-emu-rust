@@ -1,3 +1,4 @@
+// Modified for the Rust workspace and its reference tests, 2026.
 // Nes_Snd_Emu 0.1.8. http://www.slack.net/~ant/
 
 #include "Nes_Vrc6_Apu.h"

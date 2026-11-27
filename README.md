@@ -85,8 +85,6 @@ The C++ wrapper requires a C/C++ toolchain to build.
 
 ## License
 
-The pure Rust crates in this workspace are licensed under **MIT only**.
+The Rust facade and original project code use MIT. The shared audio engine and all nine Rust decoders contain Game_Music_Emu ports under LGPL-2.1-or-later. The Nuked YM2612 core uses LGPL-2.1-or-later, and the emu2413 core uses MIT. Commercial games can use the Rust library. If you distribute a statically linked game, review the relinking requirements. [Source notices and distribution guide](crates/game-music-emu/LICENSING.md)
 
-The C++ wrapper crate (`game-music-emu-wrapper`) is licensed under **MIT AND LGPL-2.1-or-later** because it bundles the original C++ Game Music Emu source code, which is LGPL-2.1.
-
-Game Music Emu is originally by Shay Green, maintained by Michael Pyne. See the [upstream license](https://bitbucket.org/mpyne/game-music-emu/src/master/license.txt) for details.
+The C++ wrapper uses the LGPL-covered Nuked backend by default. Its optional MAME backend makes the resulting library GPL-2.0-or-later. [Wrapper backend licenses](crates/game-music-emu-wrapper/NOTICES.md) · [Test fixture permissions](assets/LICENSE-SOURCES.md)

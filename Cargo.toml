@@ -19,6 +19,7 @@ default-members = ["crates/game-music-emu"]
 resolver = "2"
 
 [workspace.package]
+license = "MIT AND LGPL-2.1-or-later"
 edition = "2024"
 repository = "https://github.com/JayPavlina/Game-Music-Emu-Rust"
 
@@ -28,18 +29,18 @@ codegen-units = 1
 
 [workspace.dependencies]
 # Internal crates
-gme-core = { path = "crates/gme-core" }
-gme-common = { path = "crates/gme-common" }
-gme-nsf = { path = "crates/gme-nsf" }
-gme-spc = { path = "crates/gme-spc" }
-gme-gbs = { path = "crates/gme-gbs" }
-gme-vgm = { path = "crates/gme-vgm" }
-gme-sap = { path = "crates/gme-sap" }
-gme-kss = { path = "crates/gme-kss" }
-gme-ay = { path = "crates/gme-ay" }
-gme-gym = { path = "crates/gme-gym" }
-gme-hes = { path = "crates/gme-hes" }
-game-music-emu-wrapper = { path = "crates/game-music-emu-wrapper" }
+gme-core = { path = "crates/gme-core", version = "0.1.0" }
+gme-common = { path = "crates/gme-common", version = "0.1.0" }
+gme-nsf = { path = "crates/gme-nsf", version = "0.1.0" }
+gme-spc = { path = "crates/gme-spc", version = "0.1.0" }
+gme-gbs = { path = "crates/gme-gbs", version = "0.1.0" }
+gme-vgm = { path = "crates/gme-vgm", version = "0.1.0" }
+gme-sap = { path = "crates/gme-sap", version = "0.1.0" }
+gme-kss = { path = "crates/gme-kss", version = "0.1.0" }
+gme-ay = { path = "crates/gme-ay", version = "0.1.0" }
+gme-gym = { path = "crates/gme-gym", version = "0.1.0" }
+gme-hes = { path = "crates/gme-hes", version = "0.1.0" }
+game-music-emu-wrapper = { path = "crates/game-music-emu-wrapper", version = "0.3.0" }
 
 # External crates
 cpal = "0.18"
